@@ -18,7 +18,7 @@ class Bot(commands.Bot):
     The class representing the Discord bot
     """
 
-    def __init__(self, configuration_file):
+    def __init__(self, configuration_file="config.toml"):
         """
         Initialize the bot
         """
