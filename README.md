@@ -22,6 +22,35 @@ Just run the following command
 pip install git+https://github.com/Kyrela/discore
 ```
 
+## Usage example
+
+project architecture
+```bash
+project
+├─ main.py
+└─ config.toml
+```
+
+`main.py` code:
+```python
+import discore
+
+bot = discore.Bot('config.toml') 
+
+# Your usual commands here, or in a cog
+
+bot.run()
+```
+
+`config.toml`:
+```toml
+prefix = "!"
+token = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+description = "A basic test bot"
+```
+
+> Note :  all variables are optional except 'token'.
+
 ## Links
 
 - [Github](https://github.com/Kyrela/discore)
