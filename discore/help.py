@@ -35,6 +35,17 @@ class EmbedHelpCommand(commands.HelpCommand):
 
         return self.context.message
 
+    async def str_embed_footer(self, embed: discord.Embed):
+        """
+        Set the footer of the help message
+
+        :param embed: the embed where to put the default message
+        """
+        embed.set_footer(
+            text=f"{self.context.bot.user.name}" + (f" | ver. {self.config.version}" if self.config.version else ""),
+            icon_url=self.context.bot.user.avatar_url
+        )
+
     async def send_bot_help(self, mapping):
         """
         send the main help message
@@ -70,8 +81,79 @@ class EmbedHelpCommand(commands.HelpCommand):
                 inline=False
             )
 
-        e.set_footer(
-            text=f"{self.context.bot.user.name}" + (f" | ver. {self.config.version}" if self.config.version else ""),
-            icon_url=self.context.bot.user.avatar_url
+        await self.str_embed_footer(e)
+        await self.get_destination().reply(embed=e, mention_author=False)
+
+    async def send_cog_help(self, cog):
+        """
+        send the cog help message
+
+        :param cog: the cog on which the help is called
+        :return: None
+        """
+
+        filtered = await self.filter_commands(cog.get_commands())
+
+        e = discord.Embed(
+            title=self.config.help.cog.title.format(cog.qualified_name),
+            description=cog.description,
+            color=self.config.color
         )
+
+        e.add_field(
+            name=self.config.help.cog.commands,
+            value=("`" + "`, `".join(elem.name for elem in filtered) + "`")
+            if filtered else self.config.help.no_commands,
+            inline=False
+        )
+
+        await self.str_embed_footer(e)
+        await self.get_destination().reply(embed=e, mention_author=False)
+
+    async def send_command_help(self, command: commands.Command):
+        """
+        Send the command help message
+
+        :param command: the command on which the help is called
+        :return: None
+        """
+
+        e = discord.Embed(
+            title=self.config.help.command.title.format(command.name),
+            description=(
+                    (command.description + "\n\n" if command.description else "") +
+                    f"```{self.get_command_signature(command)}```" +
+                    ("\n" + command.help if command.help else "")
+            ),
+            color=self.config.color
+        )
+
+        await self.str_embed_footer(e)
+        await self.get_destination().reply(embed=e, mention_author=False)
+
+    async def send_group_help(self, group: commands.Group):
+        """
+        Send the command group help message
+
+        :param group: the group on which the help is called
+        :return: None
+        """
+
+        filtered = await self.filter_commands(group.commands)
+
+        e = discord.Embed(
+            title=group.qualified_name,
+            description=group.description,
+            color=self.config.color
+        )
+
+        e.add_field(
+            name=self.config.help.group.title.format(group.qualified_name),
+            value=("`" + "`, `".join(elem.name for elem in filtered) + "`")
+            if filtered else self.config.help.no_commands,
+            inline=False
+        )
+
+        await self.str_embed_footer(e)
+
         await self.get_destination().reply(embed=e, mention_author=False)
