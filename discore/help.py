@@ -157,3 +157,44 @@ class EmbedHelpCommand(commands.HelpCommand):
         await self.str_embed_footer(e)
 
         await self.get_destination().reply(embed=e, mention_author=False)
+
+    async def command_not_found(self, string):
+        """
+        Return a message error when no corresponding command is found
+
+        :param string: the called unknown command, cog or group
+        :return: the message to send
+        """
+
+        return self.config.help.command.not_found.format(string)
+
+    async def subcommand_not_found(self, command, string):
+        """
+        Return a message error when no corresponding subcommand is found
+
+        :param command: the base command
+        :param string: the unknown subcommand
+        :return: the message to send
+        """
+
+        if isinstance(command, commands.Group) and len(command.all_commands) > 0:
+            return self.config.help.subcommand.not_found.format(command.qualified_name, string)
+        return self.config.help.subcommand.no_subcommand.format(command.qualified_name)
+
+    async def send_error_message(self, error: commands.CommandError):
+        """
+        Send the error message
+
+        :param error: the error to send
+        :return: None
+        """
+
+        e = discord.Embed(
+            title=self.config.help.bot.title,
+            description=error,
+            color=self.config.color
+        )
+
+        await self.str_embed_footer(e)
+
+        await self.get_destination().reply(embed=e, mention_author=False)
