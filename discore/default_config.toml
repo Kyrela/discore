@@ -3,6 +3,22 @@ color = 0x202225
 
 [help]
     no_commands = "*No commands*"
+    [help.meta]
+        help = "Shows this message"
+        usage = "[command]"
     [help.bot]
         title = "Help menu"
         description = "Use `{} [command]` for more info on a command.\nYou can also use `{} [category]` for more info on a category."
+        cog_title = "{} commands"
+        no_category = "No category"
+    [help.cog]
+        title = "{} commands"
+        commands = "Commands"
+    [help.group]
+        title = "{} group"
+    [help.command]
+        title = "{} command"
+        not_found = "No command called `{}` found."
+    [help.subcommand]
+        not_found = "Command `{}` has no subcommand named `{}`"
+        no_subcommand = "Command `{}` has no subcommands."
