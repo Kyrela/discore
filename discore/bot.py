@@ -13,6 +13,9 @@ from mergedeep import merge
 from discord.ext import commands
 import discord
 
+from .help import EmbedHelpCommand
+from .log import Log
+
 
 def load_config(configuration_file: str) -> addict.Dict:
     """
@@ -44,11 +47,15 @@ class Bot(commands.Bot):
         """
 
         self.config = load_config(configuration_file)
+        self.log = kwargs.pop('log', None) or Log(self, self.config)
+        self.log.write("Bot initialising...", start="\n")
 
         super().__init__(
-            command_prefix=kwargs.pop('command_prefix', False) or self.config.prefix,
-            description=kwargs.pop('description', False) or self.config.description or None,
-            intents=kwargs.pop('intents', False) or discord.Intents.all(),
+            command_prefix=kwargs.pop('command_prefix', None) or self.config.prefix,
+            description=kwargs.pop('description', None) or self.config.description or None,
+            intents=kwargs.pop('intents', None) or discord.Intents.all(),
+            help_command=kwargs.pop('help_command', None) or EmbedHelpCommand(
+                self.config, command_attrs=self.config.help.meta),
             **kwargs
         )
 
