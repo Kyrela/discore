@@ -6,6 +6,7 @@ from __future__ import annotations
 import datetime
 import time
 import addict
+from textwrap import shorten
 
 import discord
 from discord.ext import commands
@@ -65,3 +66,94 @@ class Log:
         @self.bot.event
         async def on_resumed():
             self.write(f"Bot reconnected")
+
+        @self.bot.event
+        async def on_command(ctx: commands.Context):
+            self.write(
+                f"{repr(ctx.command.name)} command request sent by {repr(str(ctx.author))} ({repr(ctx.author.id)})" +
+                f" with invocation {repr(ctx.message.content[len(self.bot.command_prefix):])}")
+
+        @self.bot.event
+        async def on_command_completion(ctx: commands.Context):
+            rep = None
+            async for message in ctx.history(limit=5):
+                if message.author == ctx.me and message.reference and message.reference.message_id == ctx.message.id:
+                    rep = message
+                    break
+            message_log_infos = []
+            if rep:
+                message_log_infos += [" with a response"]
+                if rep.content:
+                    message_log_infos += [f"starting with the text "
+                                          f"'{shorten(repr(rep.content)[1:-1], width=120, placeholder='...')}'"]
+                for embed in rep.embeds:
+                    message_log_infos += [
+                        f"containing an embed with name {repr(embed.title)}, "
+                        f"and with description starting with "
+                        f"'{shorten(repr(embed.description)[1:-1], width=120, placeholder='...')}'"]
+                for attachment in rep.attachments:
+                    message_log_infos += [
+                        f"containing an file with name {repr(attachment.filename)} (url {repr(attachment.url)})"]
+
+            self.write(
+                f"{repr(ctx.command.name)} command succeeded for {repr(str(ctx.author))} ({repr(ctx.author.id)})" +
+                ", ".join(message_log_infos))
+
+        def get_command_usage(prefix: str, command: commands.Command) -> str:
+            """
+            returns a command usage text for users
+
+            :param prefix: the bot prefix
+            :param command: the command on which the usage should be got
+            :return: the command usage
+            """
+            parent = command.full_parent_name
+            if len(command.aliases) > 0:
+                aliases = '|'.join(command.aliases)
+                fmt = '[%s|%s]' % (command.name, aliases)
+                if parent:
+                    fmt = parent + ' ' + fmt
+                alias = fmt
+            else:
+                alias = command.name if not parent else parent + ' ' + command.name
+
+            return '%s%s %s' % (prefix, alias, command.signature)
+
+        @self.bot.event
+        async def on_command_error(ctx, error: Exception):
+            if isinstance(error, commands.ConversionError) or isinstance(error, commands.BadArgument):
+                await ctx.reply(self.config.error.bad_argument.format(
+                    get_command_usage(self.bot.command_prefix, ctx.command),
+                    self.bot.command_prefix + "help " + ctx.command.name), mention_author=False)
+                self.write(
+                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                    f"Bad arguments given")
+            elif isinstance(error, commands.MissingRequiredArgument):
+                await ctx.reply(self.config.error.missing_argument.format(
+                    get_command_usage(self.bot.command_prefix, ctx.command),
+                    self.bot.command_prefix + "help " + ctx.command.name), mention_author=False)
+                self.write(
+                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                    f"Missing required argument")
+            elif (isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden)) or \
+                    isinstance(error, commands.BotMissingPermissions):
+                await ctx.reply(self.config.error.bot.missing_permission, mention_author=False)
+                self.write(
+                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                    f"Bot is missing permissions")
+            elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.NotFound):
+                await ctx.reply(self.config.error.not_found, mention_author=False)
+                self.write(
+                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                    f"No matches for the request")
+            elif isinstance(error, commands.NotOwner) or isinstance(error, commands.NotOwner) or \
+                    isinstance(error, commands.MissingPermissions):
+                await ctx.reply(self.config.error.user.missing_permission, mention_author=False)
+                self.write(
+                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                    f"User is missing permissions")
+            else:
+                await ctx.reply(self.config.error.exception, mention_author=False)
+                self.write(
+                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                    f"Unknown exception")

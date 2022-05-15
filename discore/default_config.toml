@@ -22,3 +22,13 @@ color = 0x202225
     [help.subcommand]
         not_found = "Command `{}` has no subcommand named `{}`"
         no_subcommand = "Command `{}` has no subcommands."
+
+[error]
+    bad_argument = "One or more arguments are incorrect.\nTry ```{}```\nFor more information on usage, send```{}```"
+    missing_argument = "One or more arguments are missing.\nTry ```{}```\nFor more information on usage, send```{}```"
+    not_found = "Sorry, I couldn't find anything that matched what you indicated."
+    exception =  "An exceptional error has occurred."
+    [error.bot]
+        missing_permission = "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
+    [error.user]
+        missing_permission = "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
