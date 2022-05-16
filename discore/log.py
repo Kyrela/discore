@@ -7,6 +7,8 @@ import datetime
 import time
 import addict
 from textwrap import shorten
+import traceback as tb
+import sys
 
 import discord
 from discord.ext import commands
@@ -37,6 +39,90 @@ class Log:
             kwargs.pop('file', None)
             with open(self.config.log.file, "a+", encoding="utf-8") as f:
                 print(*values, file=f, **kwargs)
+
+    def write_error(self, err: Exception) -> None:
+        # TODO: to rewrite
+        """
+        print the error in the console and add it to the log file, with the current timestamp
+
+        :param err: the error to log
+        :return: None
+        """
+
+        self.write(f"Error raised:", file=sys.stderr)
+        tb.print_exception(type(err), err, err.__traceback__, file=sys.stderr)
+        if self.config.log.file:
+            with open(self.config.log.file, "a+", encoding="utf-8") as f:
+                tb.print_exception(type(err), err, err.__traceback__, file=f)
+
+    async def command_error(self, ctx: commands.Context, err: Exception) -> None:
+        """
+        Sends the internal command error to the raising channel and to the error channel
+
+        :param ctx: the context of the command invocation
+        :param err: the raised error
+        :return: None
+        """
+
+        self.write(f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}) "
+                   f": {err.__class__.__name__}")
+        self.write_error(err)
+        error_datas = tb.extract_tb(err.__traceback__)[1]
+        error_file_path = error_datas.filename.split("\\")
+        public_prompt = (
+            f"File {repr(error_file_path[len(error_file_path) - 1])}, "
+            f"line {error_datas.lineno}, "
+            f"command {repr(error_datas.name)}\n"
+            f"{err.__class__.__name__} : {err}"
+        )
+        if ctx.guild.me.guild_permissions.manage_guild and await ctx.guild.invites():
+            invite = (await ctx.guild.invites())[0].url
+        elif ctx.channel.permissions_for(ctx.guild.me).create_instant_invite:
+            invite = await ctx.channel.create_invite(
+                reason=self.config.error.invite_message,
+                max_age=86400,
+                max_uses=1,
+                temporary=True,
+                unique=False
+            )
+        else:
+            invite = None
+
+        if self.config.log.channel:
+            embed = discord.Embed(title="Bug raised")
+            embed.set_footer(
+                text=f"{self.bot.user.name}" + (f" | ver. {self.config.version}" if self.config.version else ""),
+                icon_url=self.bot.user.avatar_url
+            )
+            embed.add_field(name="Date", value=str(datetime.datetime.today())[:-7])
+            embed.add_field(name="Server", value=f"{ctx.guild.name} ({ctx.guild.id})")
+            embed.add_field(name="Command", value=error_datas.name)
+            embed.add_field(name="Author", value=f"{str(ctx.author)} ({ctx.author.id})")
+            embed.add_field(name="File", value=error_datas.filename)
+            embed.add_field(name="Line", value=str(error_datas.lineno))
+            embed.add_field(name="Error", value=err.__class__.__name__)
+            embed.add_field(name="Description", value=str(err))
+            embed.add_field(name="Original message", value=ctx.message.content)
+            embed.add_field(name="Link to message", value=ctx.message.jump_url)
+            if invite:
+                embed.add_field(name="Link to server", value=invite)
+            await self.bot.get_channel(self.config.log.channel).send(
+                "```\n" + "".join(tb.format_tb(err.__traceback__)) + "\n```", embed=embed)
+
+        self.write(f"Error context:\n"
+                   f"\tDate: {str(datetime.datetime.today())}\n"
+                   f"\tServer: {ctx.guild.name} ({ctx.guild.id})\n"
+                   f"\tCommand: {error_datas.name}\n"
+                   f"\tAuthor: {str(ctx.author)} ({ctx.author.id})\n"
+                   f"\tFile: {error_datas.filename}\n"
+                   f"\tLine: {error_datas.lineno}\n"
+                   f"\tError: {err.__class__.__name__}\n"
+                   f"\tDescription: {str(err)}\n"
+                   f"\tOriginal message: {ctx.message.content}\n"
+                   f"\tLink to message: {ctx.message.jump_url}" +
+                   (f"\n\tLink to server: {invite}" if invite else ""), file=sys.stderr)
+
+        await ctx.reply(self.config.error.exception.format(public_prompt), mention_author=False)
 
     def __init__(self, bot: commands.Bot, config: addict.Dict):
         """
@@ -152,8 +238,7 @@ class Log:
                 self.write(
                     f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                     f"User is missing permissions")
-            else:
-                await ctx.reply(self.config.error.exception, mention_author=False)
-                self.write(
-                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
-                    f"Unknown exception")
+            elif not isinstance(error, commands.CommandNotFound):
+                if isinstance(error, commands.CommandInvokeError):
+                    error = error.original
+                await self.command_error(ctx, error)
