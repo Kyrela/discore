@@ -1,8 +1,8 @@
 """
 Represents the log class and all side-utilities related to the help
 """
-from __future__ import annotations
 
+from __future__ import annotations
 import datetime
 import time
 import addict
@@ -242,3 +242,24 @@ class Log:
                 if isinstance(error, commands.CommandInvokeError):
                     error = error.original
                 await self.command_error(ctx, error)
+
+        @self.bot.event
+        async def on_error(event, *args, **kwargs):
+            err = sys.exc_info()[2]
+            self.write_error(sys.exc_info()[1])
+            self.write(f"Error context:\n\targs: {repr(args)}\n\tkargs: {repr(kwargs)}", file=sys.stderr)
+            if self.config.log.channel:
+                embed = discord.Embed(title="Bug raised")
+                embed.set_footer(
+                    text=f"{self.bot.user.name}" + (f" | ver. {self.config.version}" if self.config.version else ""),
+                    icon_url=self.bot.user.avatar_url
+                )
+                embed.add_field(name="Date", value=str(datetime.datetime.today())[:-7])
+                embed.add_field(name="Event", value=event)
+                embed.add_field(name="File", value=tb.extract_tb(err)[1].filename)
+                embed.add_field(name="Line", value=str(tb.extract_tb(err)[1].lineno))
+                embed.add_field(name="Error", value=sys.exc_info()[0].__name__)
+                embed.add_field(name="Description", value=str(sys.exc_info()[1]))
+                embed.add_field(name="Arguments", value=f"{repr(args)}\n\n{repr(kwargs)}")
+                await self.bot.get_channel(self.config.log.channel).send(
+                    "```" + "".join(tb.format_tb(err)) + "```", embed=embed)
