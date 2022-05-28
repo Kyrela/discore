@@ -25,7 +25,7 @@ pip install git+https://github.com/Kyrela/discore
 ## Usage example
 
 project architecture
-```bash
+```
 project
 ├─ main.py
 └─ config.toml
