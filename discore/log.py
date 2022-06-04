@@ -122,7 +122,10 @@ class Log:
                    f"\tLink to message: {ctx.message.jump_url}" +
                    (f"\n\tLink to server: {invite}" if invite else ""), file=sys.stderr)
 
-        await ctx.reply(self.config.error.exception.format(public_prompt), mention_author=False)
+        try:
+            await ctx.reply(self.config.error.exception.format(public_prompt), mention_author=False)
+        except discord.errors.HTTPException:
+            await ctx.send(self.config.error.exception.format(public_prompt))
 
     def __init__(self, bot: commands.Bot, config: addict.Dict):
         """
