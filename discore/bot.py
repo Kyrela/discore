@@ -80,6 +80,7 @@ class Bot(commands.Bot):
                 help_cog_name = self.config.help.meta.cog or None
                 if help_cog_name and help_cog_name.title() == cog_name.title():
                     self.help_command.cog = new_cog
+                self.log.write(f"Cog {repr(cog_name)} loaded")
 
         if self.config.help.meta.cog and not self.help_command.cog:
             raise ModuleNotFoundError(
