@@ -14,6 +14,21 @@ import discord
 from discord.ext import commands
 
 
+async def reply_with_fallback(ctx: commands.Context, message: str):
+    """
+    If the bot can't send a message to the channel, it will send it to the user instead
+
+    :param ctx: commands.Context - The context of the command
+    :type ctx: commands.Context
+    :param message: The message to send
+    :type message: str
+    :return: The return value of the function.
+    """
+    try:
+        return await ctx.reply(message, mention_author=False)
+    except discord.errors.HTTPException:
+        return await ctx.send(message)
+
 class Log:
     """
     A class for handling a discord.py logging system
@@ -122,10 +137,7 @@ class Log:
                    f"\tLink to message: {ctx.message.jump_url}" +
                    (f"\n\tLink to server: {invite}" if invite else ""), file=sys.stderr)
 
-        try:
-            await ctx.reply(self.config.error.exception.format(public_prompt), mention_author=False)
-        except discord.errors.HTTPException:
-            await ctx.send(self.config.error.exception.format(public_prompt))
+        await reply_with_fallback(ctx, self.config.error.exception.format(public_prompt))
 
     def __init__(self, bot: commands.Bot, config: addict.Dict):
         """
@@ -211,33 +223,33 @@ class Log:
         @self.bot.event
         async def on_command_error(ctx, error: Exception):
             if isinstance(error, commands.ConversionError) or isinstance(error, commands.BadArgument):
-                await ctx.reply(self.config.error.bad_argument.format(
+                await reply_with_fallback(ctx, self.config.error.bad_argument.format(
                     get_command_usage(self.bot.command_prefix, ctx.command),
-                    self.bot.command_prefix + "help " + ctx.command.name), mention_author=False)
+                    self.bot.command_prefix + "help " + ctx.command.name))
                 self.write(
                     f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                     f"Bad arguments given")
             elif isinstance(error, commands.MissingRequiredArgument):
-                await ctx.reply(self.config.error.missing_argument.format(
+                await reply_with_fallback(ctx, self.config.error.missing_argument.format(
                     get_command_usage(self.bot.command_prefix, ctx.command),
-                    self.bot.command_prefix + "help " + ctx.command.name), mention_author=False)
+                    self.bot.command_prefix + "help " + ctx.command.name))
                 self.write(
                     f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                     f"Missing required argument")
             elif (isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden)) or \
                     isinstance(error, commands.BotMissingPermissions):
-                await ctx.reply(self.config.error.bot.missing_permission, mention_author=False)
+                await reply_with_fallback(ctx, self.config.error.bot.missing_permission)
                 self.write(
                     f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                     f"Bot is missing permissions")
             elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.NotFound):
-                await ctx.reply(self.config.error.not_found, mention_author=False)
+                await reply_with_fallback(ctx, self.config.error.not_found)
                 self.write(
                     f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                     f"No matches for the request")
             elif isinstance(error, commands.NotOwner) or isinstance(error, commands.NotOwner) or \
                     isinstance(error, commands.MissingPermissions):
-                await ctx.reply(self.config.error.user.missing_permission, mention_author=False)
+                await reply_with_fallback(ctx, self.config.error.user.missing_permission)
                 self.write(
                     f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                     f"User is missing permissions")
