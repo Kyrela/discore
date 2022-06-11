@@ -24,8 +24,8 @@ color = 0x202225
         no_subcommand = "Command `{}` has no subcommands."
 
 [error]
-    bad_argument = "One or more arguments are incorrect.\nTry ```{}```\nFor more information on usage, send```{}```"
-    missing_argument = "One or more arguments are missing.\nTry ```{}```\nFor more information on usage, send```{}```"
+    bad_argument = "One or more arguments are incorrect.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
+    missing_argument = "One or more arguments are missing.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
     not_found = "Sorry, I couldn't find anything that matched what you indicated."
     exception =  "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```\n{}\n```"
     invite_message = "A bug has occurred. This invitation will allow, if needed, the developer to access the server, to understand why the bug occurred. This invitation is limited to one use, grants only the status of temporary member, and lasts maximum 1 day."
