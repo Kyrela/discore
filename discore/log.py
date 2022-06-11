@@ -29,6 +29,7 @@ async def reply_with_fallback(ctx: commands.Context, message: str):
     except discord.errors.HTTPException:
         return await ctx.send(message)
 
+
 class Log:
     """
     A class for handling a discord.py logging system
@@ -122,7 +123,7 @@ class Log:
             if invite:
                 embed.add_field(name="Link to server", value=invite)
             await self.bot.get_channel(self.config.log.channel).send(
-                "```\n" + "".join(tb.format_tb(err.__traceback__)) + "\n```", embed=embed)
+                "```\n" + "".join(tb.format_tb(err.__traceback__)).replace("```", "'''") + "\n```", embed=embed)
 
         self.write(f"Error context:\n"
                    f"\tDate: {str(datetime.datetime.today())}\n"
