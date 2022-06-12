@@ -58,6 +58,7 @@ class Bot(commands.Bot):
                 self.config, command_attrs=self.config.help.meta),
             **kwargs
         )
+        self.add_cog(self.log)
 
         self.load_cogs()
 

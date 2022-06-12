@@ -30,7 +30,31 @@ async def reply_with_fallback(ctx: commands.Context, message: str):
         return await ctx.send(message)
 
 
-class Log:
+def get_command_usage(prefix: str, command: commands.Command) -> str:
+    """
+    returns a command usage text for users
+
+    :param prefix: the bot prefix
+    :param command: the command on which the usage should be got
+    :return: the command usage
+    """
+    parent = command.full_parent_name
+    if len(command.aliases) > 0:
+        aliases = '|'.join(command.aliases)
+        fmt = '[%s|%s]' % (command.name, aliases)
+        if parent:
+            fmt = parent + ' ' + fmt
+        alias = fmt
+    else:
+        alias = command.name if not parent else parent + ' ' + command.name
+
+    return '%s%s %s' % (prefix, alias, command.signature)
+
+
+class Log(commands.Cog,
+          name="log",
+          command_attrs=dict(hidden=True),
+          description="Logs all the events happening with the bot"):
     """
     A class for handling a discord.py logging system
     """
@@ -150,132 +174,114 @@ class Log:
 
         self.bot = bot
         self.config = config
+        self.start_time = None
+        super().__init__()
 
-        @self.bot.event
-        async def on_connect():
-            self.write(f"Connected to Discord as \"{bot.user.name}\" (id : {bot.user.id})" +
-                       (f" ver. {self.config.version}" if self.config.version else ""))
+    @commands.Cog.listener()
+    async def on_connect(self):
+        self.write(f"Connected to Discord as \"{self.bot.user.name}\" (id : {self.bot.user.id})" +
+                   (f" ver. {self.config.version}" if self.config.version else ""))
 
-        @self.bot.event
-        async def on_ready():
-            self.start_time = time.time()
-            self.write(f"Bot loaded, ready to use (prefix '{self.config.prefix}')")
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.start_time = time.time()
+        self.write(f"Bot loaded, ready to use (prefix '{self.config.prefix}')")
 
-        @self.bot.event
-        async def on_disconnect():
-            self.write(f"Bot disconnected")
+    @commands.Cog.listener()
+    async def on_disconnect(self):
+        self.write(f"Bot disconnected")
 
-        @self.bot.event
-        async def on_resumed():
-            self.write(f"Bot reconnected")
+    @commands.Cog.listener()
+    async def on_resumed(self):
+        self.write(f"Bot reconnected")
 
-        @self.bot.event
-        async def on_command(ctx: commands.Context):
+    @commands.Cog.listener()
+    async def on_command(self, ctx: commands.Context):
+        self.write(
+            f"{repr(ctx.command.name)} command request sent by {repr(str(ctx.author))} ({repr(ctx.author.id)})" +
+            f" with invocation {repr(ctx.message.content[len(self.bot.command_prefix):])}")
+
+    @commands.Cog.listener()
+    async def on_command_completion(self, ctx: commands.Context):
+        rep = None
+        async for message in ctx.history(limit=5):
+            if message.author == ctx.me and message.reference and message.reference.message_id == ctx.message.id:
+                rep = message
+                break
+        message_log_infos = []
+        if rep:
+            message_log_infos += [" with a response"]
+            if rep.content:
+                message_log_infos += [f"starting with the text "
+                                      f"'{shorten(repr(rep.content)[1:-1], width=120, placeholder='...')}'"]
+            for embed in rep.embeds:
+                message_log_infos += [
+                    f"containing an embed with name {repr(embed.title)}, "
+                    f"and with description starting with "
+                    f"'{shorten(repr(embed.description)[1:-1], width=120, placeholder='...')}'"]
+            for attachment in rep.attachments:
+                message_log_infos += [
+                    f"containing an file with name {repr(attachment.filename)} (url {repr(attachment.url)})"]
+
+        self.write(
+            f"{repr(ctx.command.name)} command succeeded for {repr(str(ctx.author))} ({repr(ctx.author.id)})" +
+            ", ".join(message_log_infos))
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error: Exception):
+        if isinstance(error, commands.ConversionError) or isinstance(error, commands.BadArgument):
+            await reply_with_fallback(ctx, self.config.error.bad_argument.format(
+                get_command_usage(self.bot.command_prefix, ctx.command),
+                self.bot.command_prefix + "help " + ctx.command.name))
             self.write(
-                f"{repr(ctx.command.name)} command request sent by {repr(str(ctx.author))} ({repr(ctx.author.id)})" +
-                f" with invocation {repr(ctx.message.content[len(self.bot.command_prefix):])}")
-
-        @self.bot.event
-        async def on_command_completion(ctx: commands.Context):
-            rep = None
-            async for message in ctx.history(limit=5):
-                if message.author == ctx.me and message.reference and message.reference.message_id == ctx.message.id:
-                    rep = message
-                    break
-            message_log_infos = []
-            if rep:
-                message_log_infos += [" with a response"]
-                if rep.content:
-                    message_log_infos += [f"starting with the text "
-                                          f"'{shorten(repr(rep.content)[1:-1], width=120, placeholder='...')}'"]
-                for embed in rep.embeds:
-                    message_log_infos += [
-                        f"containing an embed with name {repr(embed.title)}, "
-                        f"and with description starting with "
-                        f"'{shorten(repr(embed.description)[1:-1], width=120, placeholder='...')}'"]
-                for attachment in rep.attachments:
-                    message_log_infos += [
-                        f"containing an file with name {repr(attachment.filename)} (url {repr(attachment.url)})"]
-
+                f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                f"Bad arguments given")
+        elif isinstance(error, commands.MissingRequiredArgument):
+            await reply_with_fallback(ctx, self.config.error.missing_argument.format(
+                get_command_usage(self.bot.command_prefix, ctx.command),
+                self.bot.command_prefix + "help " + ctx.command.name))
             self.write(
-                f"{repr(ctx.command.name)} command succeeded for {repr(str(ctx.author))} ({repr(ctx.author.id)})" +
-                ", ".join(message_log_infos))
+                f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                f"Missing required argument")
+        elif (isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden)) or \
+                isinstance(error, commands.BotMissingPermissions):
+            await reply_with_fallback(ctx, self.config.error.bot.missing_permission)
+            self.write(
+                f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                f"Bot is missing permissions")
+        elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.NotFound):
+            await reply_with_fallback(ctx, self.config.error.not_found)
+            self.write(
+                f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                f"No matches for the request")
+        elif isinstance(error, commands.NotOwner) or isinstance(error, commands.NotOwner) or \
+                isinstance(error, commands.MissingPermissions):
+            await reply_with_fallback(ctx, self.config.error.user.missing_permission)
+            self.write(
+                f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                f"User is missing permissions")
+        elif not isinstance(error, commands.CommandNotFound):
+            if isinstance(error, commands.CommandInvokeError):
+                error = error.original
+            await self.command_error(ctx, error)
 
-        def get_command_usage(prefix: str, command: commands.Command) -> str:
-            """
-            returns a command usage text for users
-
-            :param prefix: the bot prefix
-            :param command: the command on which the usage should be got
-            :return: the command usage
-            """
-            parent = command.full_parent_name
-            if len(command.aliases) > 0:
-                aliases = '|'.join(command.aliases)
-                fmt = '[%s|%s]' % (command.name, aliases)
-                if parent:
-                    fmt = parent + ' ' + fmt
-                alias = fmt
-            else:
-                alias = command.name if not parent else parent + ' ' + command.name
-
-            return '%s%s %s' % (prefix, alias, command.signature)
-
-        @self.bot.event
-        async def on_command_error(ctx, error: Exception):
-            if isinstance(error, commands.ConversionError) or isinstance(error, commands.BadArgument):
-                await reply_with_fallback(ctx, self.config.error.bad_argument.format(
-                    get_command_usage(self.bot.command_prefix, ctx.command),
-                    self.bot.command_prefix + "help " + ctx.command.name))
-                self.write(
-                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
-                    f"Bad arguments given")
-            elif isinstance(error, commands.MissingRequiredArgument):
-                await reply_with_fallback(ctx, self.config.error.missing_argument.format(
-                    get_command_usage(self.bot.command_prefix, ctx.command),
-                    self.bot.command_prefix + "help " + ctx.command.name))
-                self.write(
-                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
-                    f"Missing required argument")
-            elif (isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden)) or \
-                    isinstance(error, commands.BotMissingPermissions):
-                await reply_with_fallback(ctx, self.config.error.bot.missing_permission)
-                self.write(
-                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
-                    f"Bot is missing permissions")
-            elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.NotFound):
-                await reply_with_fallback(ctx, self.config.error.not_found)
-                self.write(
-                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
-                    f"No matches for the request")
-            elif isinstance(error, commands.NotOwner) or isinstance(error, commands.NotOwner) or \
-                    isinstance(error, commands.MissingPermissions):
-                await reply_with_fallback(ctx, self.config.error.user.missing_permission)
-                self.write(
-                    f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
-                    f"User is missing permissions")
-            elif not isinstance(error, commands.CommandNotFound):
-                if isinstance(error, commands.CommandInvokeError):
-                    error = error.original
-                await self.command_error(ctx, error)
-
-        @self.bot.event
-        async def on_error(event, *args, **kwargs):
-            err = sys.exc_info()[2]
-            self.write_error(sys.exc_info()[1])
-            self.write(f"Error context:\n\targs: {repr(args)}\n\tkargs: {repr(kwargs)}", file=sys.stderr)
-            if self.config.log.channel:
-                embed = discord.Embed(title="Bug raised")
-                embed.set_footer(
-                    text=f"{self.bot.user.name}" + (f" | ver. {self.config.version}" if self.config.version else ""),
-                    icon_url=self.bot.user.avatar_url
-                )
-                embed.add_field(name="Date", value=str(datetime.datetime.today())[:-7])
-                embed.add_field(name="Event", value=event)
-                embed.add_field(name="File", value=tb.extract_tb(err)[1].filename)
-                embed.add_field(name="Line", value=str(tb.extract_tb(err)[1].lineno))
-                embed.add_field(name="Error", value=sys.exc_info()[0].__name__)
-                embed.add_field(name="Description", value=str(sys.exc_info()[1]))
-                embed.add_field(name="Arguments", value=f"{repr(args)}\n\n{repr(kwargs)}")
-                await self.bot.get_channel(self.config.log.channel).send(
-                    "```" + "".join(tb.format_tb(err)) + "```", embed=embed)
+    @commands.Cog.listener()
+    async def on_error(self, event, *args, **kwargs):
+        err = sys.exc_info()[2]
+        self.write_error(sys.exc_info()[1])
+        self.write(f"Error context:\n\targs: {repr(args)}\n\tkargs: {repr(kwargs)}", file=sys.stderr)
+        if self.config.log.channel:
+            embed = discord.Embed(title="Bug raised")
+            embed.set_footer(
+                text=f"{self.bot.user.name}" + (f" | ver. {self.config.version}" if self.config.version else ""),
+                icon_url=self.bot.user.avatar_url
+            )
+            embed.add_field(name="Date", value=str(datetime.datetime.today())[:-7])
+            embed.add_field(name="Event", value=event)
+            embed.add_field(name="File", value=tb.extract_tb(err)[1].filename)
+            embed.add_field(name="Line", value=str(tb.extract_tb(err)[1].lineno))
+            embed.add_field(name="Error", value=sys.exc_info()[0].__name__)
+            embed.add_field(name="Description", value=str(sys.exc_info()[1]))
+            embed.add_field(name="Arguments", value=f"{repr(args)}\n\n{repr(kwargs)}")
+            await self.bot.get_channel(self.config.log.channel).send(
+                "```" + "".join(tb.format_tb(err)) + "```", embed=embed)

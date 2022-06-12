@@ -14,3 +14,4 @@ class Cog(commands.Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
+        super().__init__()
