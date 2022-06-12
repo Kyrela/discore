@@ -13,6 +13,8 @@ import sys
 import discord
 from discord.ext import commands
 
+__all__ = ('Log',)
+
 
 async def reply_with_fallback(ctx: commands.Context, message: str):
     """

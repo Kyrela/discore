@@ -15,6 +15,7 @@ import discord
 
 from .help import EmbedHelpCommand
 from .log import Log
+from .utils import Utils
 
 
 def load_config(configuration_file: str) -> addict.Dict:
@@ -59,6 +60,8 @@ class Bot(commands.Bot):
             **kwargs
         )
         self.add_cog(self.log)
+        if kwargs.pop('utils', True):
+            self.add_cog(Utils(self))
 
         self.load_cogs()
 
