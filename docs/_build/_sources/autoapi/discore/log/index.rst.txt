@@ -1,0 +1,95 @@
+:py:mod:`discore.log`
+=====================
+
+.. py:module:: discore.log
+
+.. autoapi-nested-parse::
+
+   Represents the log class and all side-utilities related to the help
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   discore.log.Log
+
+
+
+
+.. py:class:: Log(bot: discord.ext.commands.Bot, config: addict.Dict)
+
+   Bases: :py:obj:`discord.ext.commands.Cog`
+
+   A class for handling a discord.py logging system
+
+   .. py:method:: write(self, *values: object, start: str | None = '', **kwargs) -> None
+
+              print(value, ..., start='', sep=' ', end='
+      ', file=sys.stdout, flush=False)
+
+              :param values: The elements to write in the log
+              :param start: string appended before the first value, default nothing
+              :param file:  a file-like object (stream); defaults to the current sys.stdout.
+              :param sep:   string inserted between values, default a space.
+              :param end:   string appended after the last value, default a newline.
+              :param flush: whether to forcibly flush the stream.
+              
+
+
+   .. py:method:: write_error(self, err: Exception) -> None
+
+      print the error in the console and add it to the log file, with the current timestamp
+
+      :param err: the error to log
+      :return: None
+
+
+   .. py:method:: command_error(self, ctx: discord.ext.commands.Context, err: Exception) -> None
+      :async:
+
+      Sends the internal command error to the raising channel and to the error channel
+
+      :param ctx: the context of the command invocation
+      :param err: the raised error
+      :return: None
+
+
+   .. py:method:: on_connect(self)
+      :async:
+
+
+   .. py:method:: on_ready(self)
+      :async:
+
+
+   .. py:method:: on_disconnect(self)
+      :async:
+
+
+   .. py:method:: on_resumed(self)
+      :async:
+
+
+   .. py:method:: on_command(self, ctx: discord.ext.commands.Context)
+      :async:
+
+
+   .. py:method:: on_command_completion(self, ctx: discord.ext.commands.Context)
+      :async:
+
+
+   .. py:method:: on_command_error(self, ctx, error: Exception)
+      :async:
+
+
+   .. py:method:: on_error(self, event, *args, **kwargs)
+      :async:
+
+
+

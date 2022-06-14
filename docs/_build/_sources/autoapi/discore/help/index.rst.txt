@@ -1,0 +1,110 @@
+:py:mod:`discore.help`
+======================
+
+.. py:module:: discore.help
+
+.. autoapi-nested-parse::
+
+   Represents the help class and all side-utilities related to the help
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   discore.help.EmbedHelpCommand
+
+
+
+
+.. py:class:: EmbedHelpCommand(config: addict.Dict, **kwargs)
+
+   Bases: :py:obj:`discord.ext.commands.HelpCommand`
+
+   represents a discord.py help system
+
+   .. py:method:: get_destination(self)
+
+      Return the destination of the help message
+
+      :return: the destination of the help message
+
+
+   .. py:method:: str_embed_footer(self, embed: discord.Embed)
+      :async:
+
+      Set the footer of the help message
+
+      :param embed: the embed where to put the default message
+
+
+   .. py:method:: send_bot_help(self, mapping)
+      :async:
+
+      send the main help message
+
+      :param mapping: contains unused informations
+      :return: None
+
+
+   .. py:method:: send_cog_help(self, cog)
+      :async:
+
+      send the cog help message
+
+      :param cog: the cog on which the help is called
+      :return: None
+
+
+   .. py:method:: send_command_help(self, command: discord.ext.commands.Command)
+      :async:
+
+      Send the command help message
+
+      :param command: the command on which the help is called
+      :return: None
+
+
+   .. py:method:: send_group_help(self, group: discord.ext.commands.Group)
+      :async:
+
+      Send the command group help message
+
+      :param group: the group on which the help is called
+      :return: None
+
+
+   .. py:method:: command_not_found(self, string)
+      :async:
+
+      Return a message error when no corresponding command is found
+
+      :param string: the called unknown command, cog or group
+      :return: the message to send
+
+
+   .. py:method:: subcommand_not_found(self, command, string)
+      :async:
+
+      Return a message error when no corresponding subcommand is found
+
+      :param command: the base command
+      :param string: the unknown subcommand
+      :return: the message to send
+
+
+   .. py:method:: send_error_message(self, error: discord.ext.commands.CommandError)
+      :async:
+
+      Send the error message
+
+      :param error: the error to send
+      :return: None
+
+
+
