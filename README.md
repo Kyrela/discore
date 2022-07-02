@@ -77,11 +77,12 @@ color = 0x35901E
         not_found = "Command `{}` has no subcommand named `{}`"
         no_subcommand = "Command `{}` has no subcommands."
 [error]
-    bad_argument = "One or more arguments are incorrect.\nTry ```{}```\nFor more information on usage, send```{}```"
-    missing_argument = "One or more arguments are missing.\nTry ```{}```\nFor more information on usage, send```{}```"
+    bad_argument = "One or more arguments are incorrect.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
+    missing_argument = "One or more arguments are missing.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
     not_found = "Sorry, I couldn't find anything that matched what you indicated."
-    exception =  "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```{}```"
+    exception =  "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```\n{}\n```"
     invite_message = "A bug has occurred. This invitation will allow, if needed, the developer to access the server, to understand why the bug occurred. This invitation is limited to one use, grants only the status of temporary member, and lasts maximum 1 day."
+    on_cooldown = "This command is on cooldown. Try again in {:.1f} seconds."
     [error.bot]
         missing_permission = "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
     [error.user]
@@ -168,6 +169,8 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
     error (with abstracted path and without full traceback)
   - `invite_message`: the message that should be used as a reason to justify the creation of an invitation to the
     server where the bug as been raised
+  - `on_cooldown`: the message that should be sent if a command is used while it is on cooldown. `{0}` is the cooldown
+    duration in seconds
   - `bot`
     - `missing_permission`: the message that should be sent if the bot doesn't have the necessary rights to execute
       this command
