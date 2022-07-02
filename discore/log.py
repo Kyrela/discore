@@ -262,6 +262,11 @@ class Log(commands.Cog,
             self.write(
                 f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                 f"User is missing permissions")
+        elif isinstance(error, commands.CommandOnCooldown):
+            await reply_with_fallback(ctx, self.config.error.on_cooldown.format(error.retry_after))
+            self.write(
+                f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                f"On cooldown")
         elif not isinstance(error, commands.CommandNotFound):
             if isinstance(error, commands.CommandInvokeError):
                 error = error.original
