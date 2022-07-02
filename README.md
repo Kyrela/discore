@@ -11,7 +11,6 @@ A core for initialise, run and tracks errors of discord.py bots, with a "Convent
 - All information stored in a configuration file
 - Automatic error handling and responses
 - Automatic logs storage for each command called, completed and failed
-- Basic, well-designed commands such as a help command, a ping command and a restart command
 - Backwards compatibility with discord.py
 
 ## Installation
