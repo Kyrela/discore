@@ -267,6 +267,11 @@ class Log(commands.Cog,
             self.write(
                 f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                 f"On cooldown")
+        elif isinstance(error, commands.InvalidEndOfQuotedStringError):
+            await reply_with_fallback(ctx, self.config.error.invalid_quoted_string)
+            self.write(
+                f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
+                f"Invalid quoted string")
         elif not isinstance(error, commands.CommandNotFound):
             if isinstance(error, commands.CommandInvokeError):
                 error = error.original
