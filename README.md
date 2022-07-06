@@ -97,7 +97,7 @@ color = 0x35901E
 > `log.channel`, `log.file`, `version`, `color`, `help.meta.cog`, `help.meta.description`, `help.meta.brief` and 
 > `description`, as they are set to `None`. More information on used variables below.
 > You can of course store additional information in the file and access them at anytime, anywhere.
-> 
+
 `cog1.py`:
 ```py
 import discore
@@ -106,7 +106,7 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
         name="say",
         brief="Say something",
         description="Sends a message containing the string passed as an argument, and deletes the original message.",
-        help="- <message> : The string to send"
+        help="- `message` : The string to send"
     )
     async def say(self, ctx, *, message: str):
         await ctx.message.delete()
