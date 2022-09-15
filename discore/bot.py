@@ -4,6 +4,7 @@ The class representing the Discord bot
 
 __all__ = ('Bot',)
 
+import asyncio
 import os
 from os import path
 import toml
@@ -58,14 +59,15 @@ class Bot(commands.Bot):
                 self.config, command_attrs=self.config.help.meta),
             **kwargs
         )
-        self.add_cog(self.log)
 
-        self.load_cogs()
+        asyncio.run(self.load_cogs())
 
-    def load_cogs(self):
+    async def load_cogs(self):
         """
-        loads dynamically the cogs found in the /cog folder
+        loads dynamically the cogs found in the /cog folder and the log cog
         """
+
+        await self.add_cog(self.log)
 
         if path.isdir("cogs"):
             for file in os.listdir("cogs"):
@@ -76,7 +78,7 @@ class Bot(commands.Bot):
                 cog_name = file[:-3]
                 exec(f"from cogs.{cog_name} import {cog_name.title()}")
                 new_cog = eval(f"{cog_name.title()}(self)")
-                self.add_cog(new_cog)
+                await self.add_cog(new_cog)
 
                 help_cog_name = self.config.help.meta.cog or None
                 if help_cog_name and help_cog_name.title() == cog_name.title():
