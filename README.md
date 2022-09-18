@@ -49,6 +49,7 @@ bot.run()
 ```toml
 prefix = "!"
 token = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+application_id = 123456789012345678
 description = "A basic test bot"
 version = "1.0"
 color = 0x35901E
@@ -94,8 +95,8 @@ color = 0x35901E
 
 > Note : the log file is created if it does not exist, and all variables are optional except 'token'.
 > If a variable isn't provided is provided, its value is set to the value showed in this example, except for
-> `log.channel`, `log.file`, `version`, `color`, `help.meta.cog`, `help.meta.description`, `help.meta.brief` and 
-> `description`, as they are set to `None`. More information on used variables below.
+> `application_id`, `log.channel`, `log.file`, `version`, `color`, `help.meta.cog`, `help.meta.description`,
+> `help.meta.brief` and `description`, as they are set to `None`. More information on used variables below.
 > You can of course store additional information in the file and access them at anytime, anywhere.
 
 `cog1.py`:
@@ -125,6 +126,7 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
 
 - `prefix`: the bot's command prefix
 - `token`: the token of the bot (required)
+- `application_id`: the application id of the bot (required for slash commands)
 - `description`: the description of the bot, if any
 - `version`: the version of the bot, if any
 - `color`: the color that should be used in embeds, if any

@@ -187,7 +187,14 @@ class Log(commands.Cog,
     @commands.Cog.listener()
     async def on_ready(self):
         self.start_time = time.time()
+        if self.config.application_id:
+            await self.bot.tree.sync()
         self.write(f"Bot loaded, ready to use (prefix '{self.config.prefix}')")
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: discord.Guild):
+        if self.config.application_id:
+            await self.bot.tree.sync()
 
     @commands.Cog.listener()
     async def on_disconnect(self):

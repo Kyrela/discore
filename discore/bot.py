@@ -57,6 +57,7 @@ class Bot(commands.Bot):
             intents=kwargs.pop('intents', None) or discord.Intents.all(),
             help_command=kwargs.pop('help_command', None) or EmbedHelpCommand(
                 self.config, command_attrs=self.config.help.meta),
+            application_id=kwargs.pop('application_id', None) or self.config.application_id or None,
             **kwargs
         )
 
