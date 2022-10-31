@@ -134,7 +134,7 @@ class Log(commands.Cog,
             embed = discord.Embed(title="Bug raised")
             embed.set_footer(
                 text=f"{self.bot.user.name}" + (f" | ver. {self.config.version}" if self.config.version else ""),
-                icon_url=self.bot.user.avatar_url
+                icon_url=self.bot.user.display_avatar.url
             )
             embed.add_field(name="Date", value=str(datetime.datetime.today())[:-7])
             embed.add_field(name="Server", value=f"{ctx.guild.name} ({ctx.guild.id})")
@@ -293,7 +293,7 @@ class Log(commands.Cog,
             embed = discord.Embed(title="Bug raised")
             embed.set_footer(
                 text=f"{self.bot.user.name}" + (f" | ver. {self.config.version}" if self.config.version else ""),
-                icon_url=self.bot.user.avatar_url
+                icon_url=self.bot.user.display_avatar.url
             )
             embed.add_field(name="Date", value=str(datetime.datetime.today())[:-7])
             embed.add_field(name="Event", value=event)
