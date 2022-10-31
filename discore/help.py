@@ -43,7 +43,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         """
         embed.set_footer(
             text=f"{self.context.bot.user.name}" + (f" | ver. {self.config.version}" if self.config.version else ""),
-            icon_url=self.context.bot.user.avatar_url
+            icon_url=self.context.bot.user.display_avatar.url
         )
 
     async def send_bot_help(self, mapping):
@@ -68,7 +68,7 @@ class EmbedHelpCommand(commands.HelpCommand):
             description=(
                     ((bot.description + "\n\n") if bot.description else "") +
                     self.config.help.bot.description.format(
-                        self.clean_prefix + self.invoked_with, self.clean_prefix + self.invoked_with)
+                        self.context.clean_prefix + self.invoked_with, self.context.clean_prefix + self.invoked_with)
             ),
             color=self.config.color
         )
