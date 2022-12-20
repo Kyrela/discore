@@ -2,13 +2,13 @@
 A simple and empty cog, pre-attributed
 """
 
-from discord.ext import commands
+from discord.ext.commands import Cog as _Cog
 from .bot import Bot
 
 __all__ = ('Cog',)
 
 
-class Cog(commands.Cog):
+class Cog(_Cog):
     """
     creates an empty cog with a pre-attributed instance of the bot
     """
