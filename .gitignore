@@ -1,0 +1,6 @@
+.fleet/
+build/
+discore.egg-info/
+test.py
+.idea/
+.vscode/
