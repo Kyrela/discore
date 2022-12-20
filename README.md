@@ -53,6 +53,8 @@ application_id = 123456789012345678
 description = "A basic test bot"
 version = "1.0"
 color = 0x35901E
+log_level = "INFO"
+
 [help]
     no_commands = "*No commands*"
     [help.meta]
@@ -130,6 +132,7 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
 - `description`: the description of the bot, if any
 - `version`: the version of the bot, if any
 - `color`: the color that should be used in embeds, if any
+- `log_level`: the level of logs to be displayed in the console. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
 - `help`
   - `no_commands`: the message that should appear when there is no commands in the bot, cog or group
   - `meta`
