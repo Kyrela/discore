@@ -7,6 +7,8 @@ __all__ = ('Bot',)
 import asyncio
 import os
 from os import path
+from typing import Union, Optional
+
 import toml
 import addict
 from mergedeep import merge
@@ -17,17 +19,29 @@ from .help import EmbedHelpCommand
 from .log import Log
 
 
-def load_config(configuration_file: str) -> addict.Dict:
+def load_config_file(configuration_file: Optional[str]) -> addict.Dict:
     """
     The configuration file loader
 
     :param configuration_file: the path to the configuration file
     :return: the configuration as an addict.Dict
     """
-    default_config = toml.load(path.join(path.dirname(__file__), "default_config.toml"))
+
     if configuration_file is None:
-        return addict.Dict(default_config)
-    return addict.Dict(merge(default_config, toml.load(configuration_file)))
+        return load_config({})
+    return load_config(toml.load(configuration_file))
+
+
+def load_config(config: Union[dict, addict.Dict]) -> addict.Dict:
+    """
+    The configuration loader
+
+    :param config: the configuration
+    :return: the configuration as an addict.Dict
+    """
+
+    default_config = toml.load(path.join(path.dirname(__file__), "default_config.toml"))
+    return addict.Dict(merge(default_config, config))
 
 
 class Bot(commands.Bot):
@@ -48,10 +62,11 @@ class Bot(commands.Bot):
         :param configuration_file: the toml file containing configuration information
         """
 
-        if 'configuration_file' in kwargs:
-            self.config = load_config(kwargs.pop('configuration_file'))
+        if 'configuration' in kwargs:
+            self.config = load_config(kwargs.pop('configuration'))
         else:
-            self.config = load_config("config.toml")
+            self.config = load_config_file(
+                kwargs.pop('configuration_file') if 'configuration_file' in kwargs else "config.toml")
         self.log = kwargs.pop('log', None) or Log(self, self.config)
         self.log.write("Bot initialising...", start="\n")
 
