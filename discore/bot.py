@@ -40,19 +40,26 @@ class Bot(commands.Bot):
         """
         pass
 
-    def __init__(self, configuration_file: str = "config.toml", **kwargs):
+    def __init__(self, command_prefix: str = None, **kwargs):
         """
         Initialize the bot
 
         :param configuration_file: the toml file containing configuration information
         """
 
-        self.config = load_config(configuration_file)
+        if 'configuration_file' in kwargs:
+            if kwargs['configuration_file'] is not None:
+                self.config = load_config(kwargs['configuration_file'])
+            else:
+                self.config = addict.Dict(toml.load(path.join(path.dirname(__file__), "default_config.toml")))
+            del kwargs['configuration_file']
+        else:
+            self.config = load_config("config.toml")
         self.log = kwargs.pop('log', None) or Log(self, self.config)
         self.log.write("Bot initialising...", start="\n")
 
         super().__init__(
-            command_prefix=kwargs.pop('command_prefix', None) or self.config.prefix,
+            command_prefix=command_prefix or self.config.prefix,
             description=kwargs.pop('description', None) or self.config.description or None,
             intents=kwargs.pop('intents', None) or discord.Intents.all(),
             help_command=kwargs.pop('help_command', None) or EmbedHelpCommand(
@@ -100,9 +107,9 @@ class Bot(commands.Bot):
         token = token or self.config.token or None
 
         if not token:
-            raise self.NoSpecifiedTokenError("No token is specified in the configuration file")
+            raise self.NoSpecifiedTokenError("No token is specified in the configuration file nor in the run method")
 
-        super().run(self.config.token, **kwargs)
+        super().run(token, **kwargs)
 
     def __enter__(self):
         return self
