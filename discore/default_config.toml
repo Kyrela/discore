@@ -1,5 +1,6 @@
 prefix = "!"
 color = 0x202225
+log_level = "INFO"
 
 [help]
     no_commands = "*No commands*"

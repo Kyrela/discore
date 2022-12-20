@@ -10,7 +10,6 @@ from os import path
 import toml
 import addict
 from mergedeep import merge
-
 from discord.ext import commands
 import discord
 
@@ -26,6 +25,8 @@ def load_config(configuration_file: str) -> addict.Dict:
     :return: the configuration as an addict.Dict
     """
     default_config = toml.load(path.join(path.dirname(__file__), "default_config.toml"))
+    if configuration_file is None:
+        return addict.Dict(default_config)
     return addict.Dict(merge(default_config, toml.load(configuration_file)))
 
 
@@ -48,11 +49,7 @@ class Bot(commands.Bot):
         """
 
         if 'configuration_file' in kwargs:
-            if kwargs['configuration_file'] is not None:
-                self.config = load_config(kwargs['configuration_file'])
-            else:
-                self.config = addict.Dict(toml.load(path.join(path.dirname(__file__), "default_config.toml")))
-            del kwargs['configuration_file']
+            self.config = load_config(kwargs.pop('configuration_file'))
         else:
             self.config = load_config("config.toml")
         self.log = kwargs.pop('log', None) or Log(self, self.config)
@@ -109,7 +106,11 @@ class Bot(commands.Bot):
         if not token:
             raise self.NoSpecifiedTokenError("No token is specified in the configuration file nor in the run method")
 
-        super().run(token, **kwargs)
+        super().run(
+            token,
+            log_level=kwargs.pop('log_level', None) or self.config.log_level,
+            **kwargs
+        )
 
     def __enter__(self):
         return self
