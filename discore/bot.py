@@ -2,47 +2,23 @@
 The class representing the Discord bot
 """
 
-__all__ = ('Bot',)
-
 import asyncio
 import os
 from os import path
-from typing import Union, Optional
+import logging
 
-import toml
-import addict
-from mergedeep import merge
 from discord.ext import commands
 import discord
 
 from .help import EmbedHelpCommand
 from .log import Log
+from .utils import init_config, setup_logging, get_config
 
+__all__ = ('Bot', 'config')
 
-def load_config_file(configuration_file: Optional[str]) -> addict.Dict:
-    """
-    The configuration file loader
+config = get_config()
 
-    :param configuration_file: the path to the configuration file
-    :return: the configuration as an addict.Dict
-    """
-
-    if configuration_file is None:
-        return load_config({})
-    return load_config(toml.load(configuration_file))
-
-
-def load_config(config: Union[dict, addict.Dict]) -> addict.Dict:
-    """
-    The configuration loader
-
-    :param config: the configuration
-    :return: the configuration as an addict.Dict
-    """
-
-    default_config = toml.load(path.join(path.dirname(__file__), "default_config.toml"))
-    return addict.Dict(merge(default_config, config))
-
+_logger = logging.getLogger(__name__.split(".")[0])
 
 class Bot(commands.Bot):
     """
@@ -62,32 +38,30 @@ class Bot(commands.Bot):
         :param configuration_file: the toml file containing configuration information
         """
 
-        if 'configuration' in kwargs:
-            self.config = load_config(kwargs.pop('configuration'))
-        else:
-            self.config = load_config_file(
-                kwargs.pop('configuration_file') if 'configuration_file' in kwargs else "config.toml")
-        self.log = kwargs.pop('log', None) or Log(self, self.config)
-        self.log.write("Bot initialising...", start="\n")
+        global config
+        config = init_config(**kwargs)
+        setup_logging(**kwargs)
+        global _logger
+        _logger = logging.getLogger(__name__.split(".")[0])
+        _logger.info("Bot initialising...")
 
         super().__init__(
-            command_prefix=command_prefix or self.config.prefix,
-            description=kwargs.pop('description', None) or self.config.description or None,
-            intents=kwargs.pop('intents', None) or discord.Intents.all(),
-            help_command=kwargs.pop('help_command', None) or EmbedHelpCommand(
-                self.config, command_attrs=self.config.help.meta),
-            application_id=kwargs.pop('application_id', None) or self.config.application_id or None,
+            command_prefix=command_prefix or config.prefix,
+            description=kwargs.pop('description', config.description) or None,
+            intents=kwargs.pop('intents', discord.Intents.all()),
+            help_command=kwargs.pop('help_command', EmbedHelpCommand(command_attrs=config.help.meta)),
+            application_id=kwargs.pop('application_id', config.application_id) or None,
             **kwargs
         )
 
-        asyncio.run(self.load_cogs())
+        asyncio.run(self._load_cogs(kwargs.pop('log', Log(self))))
 
-    async def load_cogs(self):
+    async def _load_cogs(self, log):
         """
         loads dynamically the cogs found in the /cog folder and the log cog
         """
 
-        await self.add_cog(self.log)
+        await self.add_cog(log)
 
         if path.isdir("cogs"):
             for file in os.listdir("cogs"):
@@ -100,14 +74,14 @@ class Bot(commands.Bot):
                 new_cog = eval(f"{cog_name.title()}(self)")
                 await self.add_cog(new_cog)
 
-                help_cog_name = self.config.help.meta.cog or None
+                help_cog_name = config.help.meta.cog or None
                 if help_cog_name and help_cog_name.title() == cog_name.title():
                     self.help_command.cog = new_cog
-                self.log.write(f"Cog {repr(cog_name)} loaded")
+                _logger.info(f"Cog {repr(cog_name)} loaded")
 
-        if self.config.help.meta.cog and not self.help_command.cog:
+        if config.help.meta.cog and not self.help_command.cog:
             raise ModuleNotFoundError(
-                f"The cog {repr(self.config.help.meta.cog)}, required by the help command, wasn't found")
+                f"The cog {repr(config.help.meta.cog)}, required by the help command, wasn't found")
 
     def run(self, token=None, **kwargs):
         """
@@ -116,14 +90,15 @@ class Bot(commands.Bot):
         :return: None
         """
 
-        token = token or self.config.token or None
+        token = token or config.token or None
 
         if not token:
-            raise self.NoSpecifiedTokenError("No token is specified in the configuration file nor in the run method")
+            raise self.NoSpecifiedTokenError(
+                "No token is specified in the configuration file nor in the run method")
 
         super().run(
             token,
-            log_level=kwargs.pop('log_level', None) or self.config.log_level,
+            log_handler=None,
             **kwargs
         )
 

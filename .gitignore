@@ -4,3 +4,4 @@ discore.egg-info/
 test.py
 .idea/
 .vscode/
+/log.txt

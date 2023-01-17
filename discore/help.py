@@ -2,13 +2,16 @@
 Represents the help class and all side-utilities related to the help
 """
 
-import addict
 import itertools
 
 from discord.ext import commands
 import discord
 
+from .utils import get_config
+
 __all__ = ('EmbedHelpCommand',)
+
+config = get_config()
 
 
 class EmbedHelpCommand(commands.HelpCommand):
@@ -16,14 +19,9 @@ class EmbedHelpCommand(commands.HelpCommand):
     represents a discord.py help system
     """
 
-    def __init__(self, config: addict.Dict, **kwargs):
-        """
-        the base constructor for the class
-
-        :param config: the configuration that contains the information
-        """
-
-        self.config = config
+    def __init__(self, **kwargs):
+        global config
+        config = get_config()
         super().__init__(**kwargs)
 
     def get_destination(self):
@@ -42,7 +40,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         :param embed: the embed where to put the default message
         """
         embed.set_footer(
-            text=f"{self.context.bot.user.name}" + (f" | ver. {self.config.version}" if self.config.version else ""),
+            text=f"{self.context.bot.user.name}" + (f" | ver. {config.version}" if config.version else ""),
             icon_url=self.context.bot.user.display_avatar.url
         )
 
@@ -58,26 +56,26 @@ class EmbedHelpCommand(commands.HelpCommand):
 
         def get_category(command):
             cog = command.cog
-            return cog.qualified_name if cog is not None else self.config.help.bot.no_category
+            return cog.qualified_name if cog is not None else config.help.bot.no_category
 
         filtered = await self.filter_commands(bot.commands, sort=True, key=get_category)
         to_iterate = itertools.groupby(filtered, key=get_category)
 
         e = discord.Embed(
-            title=self.config.help.bot.title,
+            title=config.help.bot.title,
             description=(
                     ((bot.description + "\n\n") if bot.description else "") +
-                    self.config.help.bot.description.format(
+                    config.help.bot.description.format(
                         self.context.clean_prefix + self.invoked_with, self.context.clean_prefix + self.invoked_with)
             ),
-            color=self.config.color
+            color=config.color
         )
 
         for category, commands in to_iterate:
             e.add_field(
                 name=category,
                 value=("`" + "`, `".join(elem.name for elem in commands) + "`")
-                if commands else self.config.help.no_commands,
+                if commands else config.help.no_commands,
                 inline=False
             )
 
@@ -95,15 +93,15 @@ class EmbedHelpCommand(commands.HelpCommand):
         filtered = await self.filter_commands(cog.get_commands())
 
         e = discord.Embed(
-            title=self.config.help.cog.title.format(cog.qualified_name),
+            title=config.help.cog.title.format(cog.qualified_name),
             description=cog.description,
-            color=self.config.color
+            color=config.color
         )
 
         e.add_field(
-            name=self.config.help.cog.commands,
+            name=config.help.cog.commands,
             value=("`" + "`, `".join(elem.name for elem in filtered) + "`")
-            if filtered else self.config.help.no_commands,
+            if filtered else config.help.no_commands,
             inline=False
         )
 
@@ -119,13 +117,13 @@ class EmbedHelpCommand(commands.HelpCommand):
         """
 
         e = discord.Embed(
-            title=self.config.help.command.title.format(command.name),
+            title=config.help.command.title.format(command.name),
             description=(
                     (command.description + "\n\n" if command.description else "") +
                     f"```{self.get_command_signature(command)}```" +
                     ("\n" + command.help if command.help else "")
             ),
-            color=self.config.color
+            color=config.color
         )
 
         await self.str_embed_footer(e)
@@ -144,13 +142,13 @@ class EmbedHelpCommand(commands.HelpCommand):
         e = discord.Embed(
             title=group.qualified_name,
             description=group.description,
-            color=self.config.color
+            color=config.color
         )
 
         e.add_field(
-            name=self.config.help.group.title.format(group.qualified_name),
+            name=config.help.group.title.format(group.qualified_name),
             value=("`" + "`, `".join(elem.name for elem in filtered) + "`")
-            if filtered else self.config.help.no_commands,
+            if filtered else config.help.no_commands,
             inline=False
         )
 
@@ -166,7 +164,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         :return: the message to send
         """
 
-        return self.config.help.command.not_found.format(string)
+        return config.help.command.not_found.format(string)
 
     async def subcommand_not_found(self, command, string):
         """
@@ -178,8 +176,8 @@ class EmbedHelpCommand(commands.HelpCommand):
         """
 
         if isinstance(command, commands.Group) and len(command.all_commands) > 0:
-            return self.config.help.subcommand.not_found.format(command.qualified_name, string)
-        return self.config.help.subcommand.no_subcommand.format(command.qualified_name)
+            return config.help.subcommand.not_found.format(command.qualified_name, string)
+        return config.help.subcommand.no_subcommand.format(command.qualified_name)
 
     async def send_error_message(self, error: commands.CommandError):
         """
@@ -190,9 +188,9 @@ class EmbedHelpCommand(commands.HelpCommand):
         """
 
         e = discord.Embed(
-            title=self.config.help.bot.title,
+            title=config.help.bot.title,
             description=error,
-            color=self.config.color
+            color=config.color
         )
 
         await self.str_embed_footer(e)

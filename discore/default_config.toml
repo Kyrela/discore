@@ -1,6 +1,18 @@
 prefix = "!"
 color = 0x202225
-log_level = "INFO"
+
+[log]
+    level = "INFO"
+    root = true
+    format = "[{asctime}] {levelformat} {name}: {message}"
+    date_format = "%d/%m/%Y %H:%M:%S"
+    create_invite = true
+    [log.level_format]
+        debug = "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
+        info = "[{blue}{bold}INFO{no_bold}{normal}]    "
+        warning = "[{yellow}{bold}WARNING{no_bold}{normal}] "
+        error = "[{red}ERROR{normal}]   "
+        critical = "[{bg_red}CRITICAL{bg_normal}]"
 
 [help]
     no_commands = "*No commands*"

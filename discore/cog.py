@@ -13,6 +13,6 @@ class Cog(_Cog):
     creates an empty cog with a pre-attributed instance of the bot
     """
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: Bot, **kwargs):
         self.bot: Bot = bot
-        super().__init__()
+        super().__init__(**kwargs)
