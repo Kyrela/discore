@@ -1,10 +1,11 @@
 import string
 from typing import Union, Optional
 
-import toml
+import envtoml
 import addict
 from mergedeep import merge
 from os import path
+from dotenv import load_dotenv
 import logging
 
 __all__ = ('sformat', 'config', 'init_config', 'setup_logging', 'get_config')
@@ -133,7 +134,7 @@ def _load_config_file(configuration_file: Optional[str]) -> addict.Dict:
 
     if configuration_file is None:
         return _load_config({})
-    return _load_config(toml.load(configuration_file))
+    return _load_config(envtoml.load(configuration_file))
 
 
 def _load_config(config: Union[dict, addict.Dict]) -> addict.Dict:
@@ -144,7 +145,7 @@ def _load_config(config: Union[dict, addict.Dict]) -> addict.Dict:
     :return: the configuration as an addict.Dict
     """
 
-    default_config = toml.load(
+    default_config = envtoml.load(
         path.join(path.dirname(__file__), "default_config.toml"))
     return addict.Dict(merge(default_config, config))
 
@@ -153,6 +154,10 @@ def init_config(**kwargs):
     """
     Initialize the configuration
     """
+
+    env_file = kwargs.pop('env_file', '.env')
+    if env_file:
+        load_dotenv(dotenv_path=env_file)
 
     global config
     if 'configuration' in kwargs:
