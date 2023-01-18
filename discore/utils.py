@@ -4,6 +4,7 @@ from typing import Union, Optional
 import envtoml
 import addict
 import i18n
+from discord.ext import commands
 from mergedeep import merge
 from os import path
 import os
@@ -324,12 +325,15 @@ if path.exists("locales") and path.isdir("locales"):
     i18n.load_path.append("locales")
 
 
-def t(ctx, key, **kwargs):
+def t(ctx_i, key, **kwargs):
     """
     Translate a key into a string
     """
-    try:
-        locale = ctx.guild.preferred_locale.value
-    except AttributeError:
-        locale = i18n.config.get("locale")
+    if isinstance(ctx_i, commands.Context):
+        if ctx_i.interaction:
+            locale = ctx_i.interaction.locale.value
+        else:
+            locale = i18n.config.get("locale")
+    else:
+        locale = ctx_i.locale.value
     return i18n.t(key, locale=locale, **kwargs)
