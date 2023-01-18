@@ -6,6 +6,7 @@ import addict
 import i18n
 from mergedeep import merge
 from os import path
+import os
 from dotenv import load_dotenv
 import logging
 
@@ -171,8 +172,13 @@ def init_config(**kwargs):
     if 'configuration' in kwargs:
         config = _load_config(kwargs.pop('configuration'))
     else:
-        config = _load_config_file(
-            kwargs.pop('configuration_file', 'config.toml'))
+        if 'configuration_file' in kwargs:
+            config_file = kwargs.pop('configuration_file')
+        elif 'DISCORE_CONFIG' in os.environ:
+            config_file = os.environ['DISCORE_CONFIG']
+        else:
+            config_file = "config.toml"
+        config = _load_config_file(config_file)
     return config
 
 
