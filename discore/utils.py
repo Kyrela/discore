@@ -321,7 +321,7 @@ def t(ctx, key, **kwargs):
     Translate a key into a string
     """
     try:
-        locale = ctx.guild.preferred_locale
+        locale = ctx.guild.preferred_locale.value
     except AttributeError:
-        locale = "en-US"
-    return i18n.t(key, locale=locale.value, **kwargs)
+        locale = i18n.config.get("locale")
+    return i18n.t(key, locale=locale, **kwargs)

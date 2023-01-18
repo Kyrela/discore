@@ -6,8 +6,28 @@ fr:
       usage: "[commande]"
     bot:
       title: "Menu d'aide"
+      description: "Utilisez `{} [commande]` pour plus d'informations sur une commande.\nVous pouvez aussi utiliser `{} [catégorie]` pour plus d'informations sur une catégorie."
       no_category: "Sans catégorie"
     cog:
       title: "Commandes {}"
+      commands: "Commandes"
     group:
       title: "Groupe {}"
+    command:
+      title: "Commande {}"
+      not_found: "Aucune commande appelée `{}` trouvée."
+    subcommand:
+      not_found: "La commande `{}` n'a pas de sous-commande appelée `{}`"
+      no_subcommand: "La commande `{}` n'a pas de sous-commandes."
+  error:
+    bad_argument: "Un ou plusieurs arguments sont incorrects.\nEssayez \n```\n{}\n```\nPour plus d'informations sur l'utilisation, envoyez\n```\n{}\n```"
+    missing_argument: "Un ou plusieurs arguments sont manquants.\nEssayez \n```\n{}\n```\nPour plus d'informations sur l'utilisation, envoyez\n```\n{}\n```"
+    not_found: "Désolé, je n'ai rien trouvé correspondant à ce que vous avez indiqué."
+    exception: "Une erreur exceptionnelle est survenue. Le bug a été automatiquement signalé, veuillez patienter. Détail de l'erreur :```\n{}\n```"
+    invite_message: "Un bug est survenu. Cette invitation vous permettra, si besoin, d'accéder au serveur, afin de comprendre pourquoi le bug est survenu. Cette invitation est limitée à une utilisation, vous accorde uniquement le statut de membre temporaire, et dure maximum 1 jour."
+    on_cooldown: "Cette commande est en cooldown. Réessayez dans {:.1f} secondes."
+    invalid_quoted_string: "Désolé, mais je n'ai pas pu correctement traiter les arguments. Peut-être avez-vous oublié d'insérer un espace après une citation ?"
+    bot:
+      missing_permission: "Je n'ai pas les permissions nécessaires pour effectuer cette action (rôle pas assez haut ou permission non accordée)"
+    user:
+      missing_permission: "Vous n'avez pas les permissions nécessaires pour effectuer cette action (rôle pas assez haut ou permission non accordée)"

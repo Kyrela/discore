@@ -8,6 +8,7 @@ from discord.ext import commands
 import discord
 
 from .utils import get_config
+from i18n import t
 
 __all__ = ('EmbedHelpCommand',)
 
@@ -56,16 +57,16 @@ class EmbedHelpCommand(commands.HelpCommand):
 
         def get_category(command):
             cog = command.cog
-            return cog.qualified_name if cog is not None else config.help.bot.no_category
+            return cog.qualified_name if cog is not None else t("help.bot.no_category")
 
         filtered = await self.filter_commands(bot.commands, sort=True, key=get_category)
         to_iterate = itertools.groupby(filtered, key=get_category)
 
         e = discord.Embed(
-            title=config.help.bot.title,
+            title=t("help.bot.title"),
             description=(
                     ((bot.description + "\n\n") if bot.description else "") +
-                    config.help.bot.description.format(
+                    t("help.bot.description").format(
                         self.context.clean_prefix + self.invoked_with, self.context.clean_prefix + self.invoked_with)
             ),
             color=config.color
@@ -75,7 +76,7 @@ class EmbedHelpCommand(commands.HelpCommand):
             e.add_field(
                 name=category,
                 value=("`" + "`, `".join(elem.name for elem in commands) + "`")
-                if commands else config.help.no_commands,
+                if commands else t("help.no_commands"),
                 inline=False
             )
 
@@ -93,15 +94,15 @@ class EmbedHelpCommand(commands.HelpCommand):
         filtered = await self.filter_commands(cog.get_commands())
 
         e = discord.Embed(
-            title=config.help.cog.title.format(cog.qualified_name),
+            title=t("help.cog.title").format(cog.qualified_name),
             description=cog.description,
             color=config.color
         )
 
         e.add_field(
-            name=config.help.cog.commands,
+            name=t("help.cog.commands"),
             value=("`" + "`, `".join(elem.name for elem in filtered) + "`")
-            if filtered else config.help.no_commands,
+            if filtered else t("help.no_commands"),
             inline=False
         )
 
@@ -117,7 +118,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         """
 
         e = discord.Embed(
-            title=config.help.command.title.format(command.name),
+            title=t("help.command.title").format(command.name),
             description=(
                     (command.description + "\n\n" if command.description else "") +
                     f"```{self.get_command_signature(command)}```" +
@@ -146,9 +147,9 @@ class EmbedHelpCommand(commands.HelpCommand):
         )
 
         e.add_field(
-            name=config.help.group.title.format(group.qualified_name),
+            name=t("help.group.title").format(group.qualified_name),
             value=("`" + "`, `".join(elem.name for elem in filtered) + "`")
-            if filtered else config.help.no_commands,
+            if filtered else t("help.no_commands"),
             inline=False
         )
 
@@ -164,7 +165,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         :return: the message to send
         """
 
-        return config.help.command.not_found.format(string)
+        return t("help.command.not_found").format(string)
 
     async def subcommand_not_found(self, command, string):
         """
@@ -176,8 +177,8 @@ class EmbedHelpCommand(commands.HelpCommand):
         """
 
         if isinstance(command, commands.Group) and len(command.all_commands) > 0:
-            return config.help.subcommand.not_found.format(command.qualified_name, string)
-        return config.help.subcommand.no_subcommand.format(command.qualified_name)
+            return t("help.subcommand.not_found").format(command.qualified_name, string)
+        return t("help.subcommand.no_subcommand").format(command.qualified_name)
 
     async def send_error_message(self, error: commands.CommandError):
         """
@@ -188,7 +189,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         """
 
         e = discord.Embed(
-            title=config.help.bot.title,
+            title=t("help.bot.title"),
             description=error,
             color=config.color
         )

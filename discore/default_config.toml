@@ -13,38 +13,3 @@ color = 0x202225
         warning = "[{yellow}{bold}WARNING{no_bold}{normal}] "
         error = "[{red}ERROR{normal}]   "
         critical = "[{bg_red}CRITICAL{bg_normal}]"
-
-[help]
-    no_commands = "*No commands*"
-    [help.meta]
-        help = "Shows this message"
-        usage = "[command]"
-    [help.bot]
-        title = "Help menu"
-        description = "Use `{} [command]` for more info on a command.\nYou can also use `{} [category]` for more info on a category."
-        cog_title = "{} commands"
-        no_category = "No category"
-    [help.cog]
-        title = "{} commands"
-        commands = "Commands"
-    [help.group]
-        title = "{} group"
-    [help.command]
-        title = "{} command"
-        not_found = "No command called `{}` found."
-    [help.subcommand]
-        not_found = "Command `{}` has no subcommand named `{}`"
-        no_subcommand = "Command `{}` has no subcommands."
-
-[error]
-    bad_argument = "One or more arguments are incorrect.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
-    missing_argument = "One or more arguments are missing.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
-    not_found = "Sorry, I couldn't find anything that matched what you indicated."
-    exception =  "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```\n{}\n```"
-    invite_message = "A bug has occurred. This invitation will allow, if needed, the developer to access the server, to understand why the bug occurred. This invitation is limited to one use, grants only the status of temporary member, and lasts maximum 1 day."
-    on_cooldown = "This command is on cooldown. Try again in {:.1f} seconds."
-    invalid_quoted_string = "Sorry, but I couldn't correctly process the arguments. Maybe you forgot to put a space after a closing quote ?"
-    [error.bot]
-        missing_permission = "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
-    [error.user]
-        missing_permission = "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"

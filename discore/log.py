@@ -16,6 +16,8 @@ from discord.ext import commands
 
 from .utils import get_config
 
+from i18n import t
+
 __all__ = ('Log',)
 
 config = get_config()
@@ -90,7 +92,7 @@ class Log(commands.Cog,
             f"{err.__class__.__name__} : {err}"
         )
 
-        await reply_with_fallback(ctx, config.error.exception.format(public_prompt))
+        await reply_with_fallback(ctx, t("error.exception").format(public_prompt))
 
         if ctx.guild.me.guild_permissions.manage_guild \
                 and await ctx.guild.invites() and config.log.create_invite:
@@ -98,7 +100,7 @@ class Log(commands.Cog,
         elif ctx.channel.permissions_for(ctx.guild.me).create_instant_invite \
                  and config.log.create_invite:
             invite = await ctx.channel.create_invite(
-                reason=config.error.invite_message,
+                reason=t("error.invite_message"),
                 max_age=86400,
                 max_uses=1,
                 temporary=True,
@@ -215,14 +217,14 @@ class Log(commands.Cog,
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error: Exception):
         if isinstance(error, commands.ConversionError) or isinstance(error, commands.BadArgument):
-            await reply_with_fallback(ctx, config.error.bad_argument.format(
+            await reply_with_fallback(ctx, t("error.bad_argument").format(
                 get_command_usage(self.bot.command_prefix, ctx.command),
                 self.bot.command_prefix + "help " + ctx.command.name))
             _logger.warning(
                 f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                 f"Bad arguments given")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await reply_with_fallback(ctx, config.error.missing_argument.format(
+            await reply_with_fallback(ctx, t("error.missing_argument").format(
                 get_command_usage(self.bot.command_prefix, ctx.command),
                 self.bot.command_prefix + "help " + ctx.command.name))
             _logger.warning(
@@ -230,28 +232,28 @@ class Log(commands.Cog,
                 f"Missing required argument")
         elif (isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden)) or \
                 isinstance(error, commands.BotMissingPermissions):
-            await reply_with_fallback(ctx, config.error.bot.missing_permission)
+            await reply_with_fallback(ctx, t("error.bot.missing_permission"))
             _logger.warning(
                 f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                 f"Bot is missing permissions")
         elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.NotFound):
-            await reply_with_fallback(ctx, config.error.not_found)
+            await reply_with_fallback(ctx, t("error.not_found"))
             _logger.warning(
                 f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                 f"No matches for the request")
         elif isinstance(error, commands.NotOwner) or isinstance(error, commands.NotOwner) or \
                 isinstance(error, commands.MissingPermissions):
-            await reply_with_fallback(ctx, config.error.user.missing_permission)
+            await reply_with_fallback(ctx, t("error.user.missing_permission"))
             _logger.warning(
                 f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                 f"User is missing permissions")
         elif isinstance(error, commands.CommandOnCooldown):
-            await reply_with_fallback(ctx, config.error.on_cooldown.format(error.retry_after))
+            await reply_with_fallback(ctx, t("error.on_cooldown").format(error.retry_after))
             _logger.warning(
                 f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                 f"On cooldown")
         elif isinstance(error, commands.InvalidEndOfQuotedStringError):
-            await reply_with_fallback(ctx, config.error.invalid_quoted_string)
+            await reply_with_fallback(ctx, t("error.invalid_quoted_string"))
             _logger.warning(
                 f"{repr(ctx.command.name)} command failed for {repr(str(ctx.author))} ({repr(ctx.author.id)}): "
                 f"Invalid quoted string")
