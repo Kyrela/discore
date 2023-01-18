@@ -1,0 +1,77 @@
+:py:mod:`discore.log`
+=====================
+
+.. py:module:: discore.log
+
+.. autoapi-nested-parse::
+
+   Represents the log class and all side-utilities related to the help
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   discore.log.Log
+
+
+
+
+.. py:class:: Log(bot: discord.ext.commands.Bot, **kwargs)
+
+   Bases: :py:obj:`discord.ext.commands.Cog`
+
+   A class for handling a discord.py logging system
+
+   .. py:method:: command_error(ctx: discord.ext.commands.Context, err: Exception) -> None
+      :async:
+
+      Sends the internal command error to the raising channel and to the error channel
+
+      :param ctx: the context of the command invocation
+      :param err: the raised error
+      :return: None
+
+
+   .. py:method:: on_connect()
+      :async:
+
+
+   .. py:method:: on_ready()
+      :async:
+
+
+   .. py:method:: on_guild_join(guild: discord.Guild)
+      :async:
+
+
+   .. py:method:: on_disconnect()
+      :async:
+
+
+   .. py:method:: on_resumed()
+      :async:
+
+
+   .. py:method:: on_command(ctx: discord.ext.commands.Context)
+      :async:
+
+
+   .. py:method:: on_command_completion(ctx: discord.ext.commands.Context)
+      :async:
+
+
+   .. py:method:: on_command_error(ctx, error: Exception)
+      :async:
+
+
+   .. py:method:: on_error(event, *args, **kwargs)
+      :async:
+
+
+

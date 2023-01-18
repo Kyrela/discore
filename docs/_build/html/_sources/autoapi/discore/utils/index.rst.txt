@@ -1,0 +1,82 @@
+:py:mod:`discore.utils`
+=======================
+
+.. py:module:: discore.utils
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   discore.utils.sformat
+   discore.utils.init_config
+   discore.utils.get_config
+   discore.utils.setup_logging
+   discore.utils.t
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   discore.utils.config
+
+
+.. py:function:: sformat(s, *args, **kwargs)
+
+   Sparse format a string.
+
+   Parameters
+   ----------
+   s : str
+   args : *Any
+   kwargs : **Any
+
+   Examples
+   --------
+   >>> sformat('The {} is {}', 'answer')
+   'The answer is {}'
+
+   >>> sformat('The answer to {question!r} is {answer:0.2f}', answer=42)
+   'The answer to {question!r} is 42.00'
+
+   >>> sformat('The {} to {} is {:0.{p}f}', 'answer', 'everything', p=4)
+   'The answer to everything is {:0.4f}'
+
+   Returns
+   -------
+   str
+
+
+.. py:data:: config
+   :type: addict.Dict
+
+   
+
+.. py:function:: init_config(**kwargs)
+
+   Initialize the configuration
+
+
+.. py:function:: get_config()
+
+
+.. py:function:: setup_logging(**kwargs) -> None
+
+   Setup the logging
+
+   :return: None
+
+
+.. py:function:: t(ctx_i, key, **kwargs)
+
+   Translate a key into a string
+
+

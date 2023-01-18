@@ -1,0 +1,144 @@
+:py:mod:`discore`
+=================
+
+.. py:module:: discore
+
+.. autoapi-nested-parse::
+
+   Initialize the package Discore, based on the library discord.py.
+
+   Copyright (c) 2022 Kyrela
+
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   bot/index.rst
+   cog/index.rst
+   help/index.rst
+   log/index.rst
+   utils/index.rst
+
+
+Package Contents
+----------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   discore.Bot
+   discore.Cog
+
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   discore.sformat
+   discore.init_config
+   discore.setup_logging
+   discore.get_config
+   discore.t
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   discore.config
+
+
+.. py:function:: sformat(s, *args, **kwargs)
+
+   Sparse format a string.
+
+   Parameters
+   ----------
+   s : str
+   args : *Any
+   kwargs : **Any
+
+   Examples
+   --------
+   >>> sformat('The {} is {}', 'answer')
+   'The answer is {}'
+
+   >>> sformat('The answer to {question!r} is {answer:0.2f}', answer=42)
+   'The answer to {question!r} is 42.00'
+
+   >>> sformat('The {} to {} is {:0.{p}f}', 'answer', 'everything', p=4)
+   'The answer to everything is {:0.4f}'
+
+   Returns
+   -------
+   str
+
+
+.. py:data:: config
+   :type: addict.Dict
+
+   
+
+.. py:function:: init_config(**kwargs)
+
+   Initialize the configuration
+
+
+.. py:function:: setup_logging(**kwargs) -> None
+
+   Setup the logging
+
+   :return: None
+
+
+.. py:function:: get_config()
+
+
+.. py:function:: t(ctx_i, key, **kwargs)
+
+   Translate a key into a string
+
+
+.. py:class:: Bot(command_prefix: str = None, **kwargs)
+
+   Bases: :py:obj:`discord.ext.commands.Bot`
+
+   The class representing the Discord bot
+
+   .. py:method:: _load_cogs(log)
+      :async:
+
+      loads dynamically the cogs found in the /cog folder and the log cog
+
+
+   .. py:method:: run(token=None, **kwargs)
+
+      Runs the bot
+
+      :return: None
+
+
+   .. py:method:: __enter__()
+
+
+   .. py:method:: __exit__(exc_type, exc_val, exc_tb)
+
+
+
+.. py:class:: Cog(bot: discore.bot.Bot, **kwargs)
+
+   Bases: :py:obj:`discord.ext.commands.Cog`
+
+   creates an empty cog with a pre-attributed instance of the bot
+
+

@@ -1,0 +1,31 @@
+:py:mod:`discore.cog`
+=====================
+
+.. py:module:: discore.cog
+
+.. autoapi-nested-parse::
+
+   A simple and empty cog, pre-attributed
+
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   discore.cog.Cog
+
+
+
+
+.. py:class:: Cog(bot: discore.bot.Bot, **kwargs)
+
+   Bases: :py:obj:`discord.ext.commands.Cog`
+
+   creates an empty cog with a pre-attributed instance of the bot
+
+
