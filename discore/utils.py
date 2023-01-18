@@ -314,6 +314,8 @@ i18n.set('file_format', 'yml')
 i18n.set('locale', 'en-US')
 i18n.set('fallback', 'en-US')
 i18n.load_path.append(path.join(path.dirname(__file__), "locales"))
+ if path.exists("locales") and path.isdir("locales"):
+    i18n.load_path.append("locales")
 
 
 def t(ctx, key, **kwargs):
