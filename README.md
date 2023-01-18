@@ -1,16 +1,19 @@
 # Discore
 
 ![License](https://img.shields.io/github/license/kyrela/discore)
-![Development](https://img.shields.io/badge/Development%20Status-Production%2FBeta-orange)
+![Development](https://img.shields.io/badge/Development%20Status-Beta-orange)
 
 A core for initialise, run and tracks errors of discord.py bots, with a "Convention over configuration" philosophy
 
 ## Features
 
 - One-line bot initialisation and one-line run
+- better default commands
 - All information stored in a configuration file
 - Automatic error handling and responses
 - Automatic logs storage for each command called, completed and failed
+- localisation automatic detection and support
+- Multiple environment support
 - Backwards compatibility with discord.py
 
 ## Installation
@@ -29,10 +32,12 @@ project architecture
 project
 ├─ main.py   # name can be anything
 ├─ config.toml   # if name is different from it, it should be passed as an argument to the class
-└─ cogs   # the name has to be 'cogs'
-   ├─ cog1.py   # the cog class contained by the file should be equal to filename.title() 
-   └─ cog2.py   # example : 'cog2.py' contains the cog 'Cog2'
- 
+├─ cogs   # the name has to be 'cogs'
+│  ├─ cog1.py   # the cog class contained by the file should be equal to filename.title() 
+│  └─ cog2.py   # example : 'cog2.py' contains the cog 'Cog2'
+└─ locales   # the name has to be 'locales'
+   ├─ en-US.yml   # the locale file should be named with the language code
+   └─ fr.yml   # example : 'fr.yml' contains the locale for french
 ```
 
 `main.py` code:
@@ -53,51 +58,27 @@ application_id = 123456789012345678
 description = "A basic test bot"
 version = "1.0"
 color = 0x35901E
-log_level = "INFO"
 
-[help]
-    no_commands = "*No commands*"
-    [help.meta]
-        help = "Shows this message"
-        usage = "[command]"
-        description = "displays a list of commands"
-        brief = "Shows this message"
-        cog = "cog1"
-    [help.bot]
-        title = "Help menu"
-        description = "Use `{} [command]` for more info on a command.\nYou can also use `{} [category]` for more info on a category."
-        no_category = "No category"
-    [help.cog]
-        title = "{} commands"
-        commands = "Commands"
-    [help.group]
-        title = "{} group"
-    [help.command]
-        title = "{} command"
-        not_found = "No command called `{}` found."
-    [help.subcommand]
-        not_found = "Command `{}` has no subcommand named `{}`"
-        no_subcommand = "Command `{}` has no subcommands."
-[error]
-    bad_argument = "One or more arguments are incorrect.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
-    missing_argument = "One or more arguments are missing.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
-    not_found = "Sorry, I couldn't find anything that matched what you indicated."
-    exception =  "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```\n{}\n```"
-    invite_message = "A bug has occurred. This invitation will allow, if needed, the developer to access the server, to understand why the bug occurred. This invitation is limited to one use, grants only the status of temporary member, and lasts maximum 1 day."
-    on_cooldown = "This command is on cooldown. Try again in {:.1f} seconds."
-    [error.bot]
-        missing_permission = "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
-    [error.user]
-        missing_permission = "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
 [log]
     channel = 1111111111111
     file = "log.txt"
+    level = "INFO"
+    root = true
+    format = "[{asctime}] {levelformat} {name}: {message}"
+    date_format = "%d/%m/%Y %H:%M:%S"
+    create_invite = true
+    [log.level_format]
+        debug = "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
+        info = "[{blue}{bold}INFO{no_bold}{normal}]    "
+        warning = "[{yellow}{bold}WARNING{no_bold}{normal}] "
+        error = "[{red}ERROR{normal}]   "
+        critical = "[{bg_red}CRITICAL{bg_normal}]"
 ```
 
 > Note : the log file is created if it does not exist, and all variables are optional except 'token'.
-> If a variable isn't provided is provided, its value is set to the value showed in this example, except for
-> `application_id`, `log.channel`, `log.file`, `version`, `color`, `help.meta.cog`, `help.meta.description`,
-> `help.meta.brief` and `description`, as they are set to `None`. More information on used variables below.
+> If a variable isn't provided, its value is set to the value showed in this example, except for
+> `application_id`, `log.channel`, `log.file`, `version`, `color` and `description`, as they are
+> set to `None`. More information on used variables below.
 > You can of course store additional information in the file and access them at anytime, anywhere.
 
 `cog1.py`:
@@ -123,6 +104,46 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
       await ctx.message.reply("Pong!")
 ```
 
+`en-US.yml`:
+```yaml
+en-US:
+  help:
+    no_commands: "*No commands*"
+    meta:
+      help: "Shows this message"
+      usage: "[command]"
+    bot:
+      title: "Help menu"
+      description: "Use `{} [command]` for more info on a command.\nYou can also use `{} [category]` for more info on a category."
+      no_category: "No category"
+    cog:
+      title: "{} commands"
+      commands: "Commands"
+    group:
+      title: "{} group"
+    command:
+      title: "{} command"
+      not_found: "No command called `{}` found."
+    subcommand:
+      not_found: "Command `{}` has no subcommand named `{}`"
+      no_subcommand: "Command `{}` has no subcommands."
+
+  error:
+    bad_argument: "One or more arguments are incorrect.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
+    missing_argument: "One or more arguments are missing.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
+    not_found: "Sorry, I couldn't find anything that matched what you indicated."
+    exception: "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```\n{}\n```"
+    invite_message: "A bug has occurred. This invitation will allow, if needed, the developer to access the server, to understand why the bug occurred. This invitation is limited to one use, grants only the status of temporary member, and lasts maximum 1 day."
+    on_cooldown: "This command is on cooldown. Try again in {:.1f} seconds."
+    invalid_quoted_string: "Sorry, but I couldn't correctly process the arguments. Maybe you forgot to put a space after a closing quote ?"
+    bot:
+      missing_permission: "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
+    user:
+      missing_permission: "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
+```
+
+> The localisations provided here are the default one, and are used if they're not provided in the locale file.
+
 ## List of variables contained in the configuration file
 
 - `prefix`: the bot's command prefix
@@ -131,7 +152,30 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
 - `description`: the description of the bot, if any
 - `version`: the version of the bot, if any
 - `color`: the color that should be used in embeds, if any
-- `log_level`: the level of logs to be displayed in the console. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+- `log`
+  - `channel`: the channel where the information and errors should be logged, if any (int)
+  - `file`: the file where the information and errors should be logged, if any
+  - `level`: the level of logs to be displayed in the console. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+  - `root`: whether or not the whole hierarchy of the bot should be logged
+  - `format`: the format of the logs. The following variables can be used :
+    - `{asctime}`: the date and time of the log
+    - `{name}`: the name of the logger
+    - `{levelname}`: the level of the log
+    - `{message}`: the message of the log
+    - `{levelformat}`: the level of the log, formatted according to the `level_format` variable
+  - `date_format`: the format of the date and time of the log
+  - `create_invite`: whether or not an invite should be created when an error occurs
+  - `level_format`:
+    - `debug`: the format of the debug level
+    - `info`: the format of the info level
+    - `warning`: the format of the warning level
+    - `error`: the format of the error level
+    - `critical`: the format of the critical level
+
+> Note : All format arguments are optional
+
+## List of localisation variables
+
 - `help`
   - `no_commands`: the message that should appear when there is no commands in the bot, cog or group
   - `meta`
@@ -145,7 +189,7 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
     - `description`: the description of the help message. Can be information on his usages
     - `no_category`: the title that should appear on top of the 'No cog-related' section
   - `cog`
-    - `title`: the title that should appear at the top of the help message related to a cog. `{0}` is the name of the 
+    - `title`: the title that should appear at the top of the help message related to a cog. `{0}` is the name of the
       cog
     - `commands`: the of the commands section
   - `group`
@@ -160,7 +204,7 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
     - `not_found`: the message that should appear if no subcommand of a command corresponding to a name is found.
       `{0}` is the name of the searched command, `{1}` of the searched subcommand
     - `no_subcommand`: the message that should appear if a command doesn't have any subcommand.
-    `{0}` is the name of the command
+      `{0}` is the name of the command
 - `error`
   - `bad_argument`: the message that should be sent if a command is used with the wrong arguments. `{0}` is the
     command signature, `{1}` is the help command to get help on this command
@@ -180,11 +224,7 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
   - `user`
     - `missing_permission`: the message that should be sent if the user that called the command doesn't have the
       necessary rights to use this command
-- `log`
-  - `channel`: the channel where the information and errors should be logged, if any (int)
-  - `file`: the file where the information and errors should be logged, if any
 
-> Note : All format arguments are optional
 
 ## Links
 
