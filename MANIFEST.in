@@ -1,1 +1,2 @@
 include discore/default_config.toml
+include discore/locales/*

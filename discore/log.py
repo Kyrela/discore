@@ -4,7 +4,7 @@ Represents the log class and all side-utilities related to the help
 
 from __future__ import annotations
 import datetime
-import os.path as path
+from os import path
 import time
 from textwrap import shorten
 import traceback as tb

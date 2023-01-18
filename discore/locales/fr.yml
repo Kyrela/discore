@@ -1,0 +1,13 @@
+fr:
+  help:
+    no_commands: "*Aucune commande*"
+    meta:
+      help: "Affiche ce message"
+      usage: "[commande]"
+    bot:
+      title: "Menu d'aide"
+      no_category: "Sans catégorie"
+    cog:
+      title: "Commandes {}"
+    group:
+      title: "Groupe {}"

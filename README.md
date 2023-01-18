@@ -66,7 +66,6 @@ log_level = "INFO"
     [help.bot]
         title = "Help menu"
         description = "Use `{} [command]` for more info on a command.\nYou can also use `{} [category]` for more info on a category."
-        cog_title = "{} commands"
         no_category = "No category"
     [help.cog]
         title = "{} commands"
@@ -144,7 +143,6 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
   - `bot`
     - `title`: the title that should appear at the top of the help message
     - `description`: the description of the help message. Can be information on his usages
-    - `cog_title`: the title that should appear on top of cog sections. `{0}` is the name of the cog
     - `no_category`: the title that should appear on top of the 'No cog-related' section
   - `cog`
     - `title`: the title that should appear at the top of the help message related to a cog. `{0}` is the name of the 

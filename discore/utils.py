@@ -3,12 +3,20 @@ from typing import Union, Optional
 
 import envtoml
 import addict
+import i18n
 from mergedeep import merge
 from os import path
 from dotenv import load_dotenv
 import logging
 
-__all__ = ('sformat', 'config', 'init_config', 'setup_logging', 'get_config')
+__all__ = (
+    'sformat',
+    'config',
+    'init_config',
+    'setup_logging',
+    'get_config',
+    't'
+)
 
 
 class SparseFormatter(string.Formatter):
@@ -299,3 +307,21 @@ def setup_logging(**kwargs) -> None:
         for handler in handlers:
             logger.addHandler(handler)
         logger.setLevel(log_level)
+
+
+i18n.set('filename_format', '{locale}.{format}')
+i18n.set('file_format', 'yml')
+i18n.set('locale', 'en-US')
+i18n.set('fallback', 'en-US')
+i18n.load_path.append(path.join(path.dirname(__file__), "locales"))
+
+
+def t(ctx, key, **kwargs):
+    """
+    Translate a key into a string
+    """
+    try:
+        locale = ctx.guild.preferred_locale
+    except AttributeError:
+        locale = "en-US"
+    return i18n.t(key, locale=locale.value, **kwargs)
