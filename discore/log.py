@@ -27,12 +27,11 @@ _logger = logging.getLogger(__name__.split(".")[0])
 
 async def reply_with_fallback(ctx: commands.Context, message: str):
     """
-    If the bot can't send a message to the channel, it will send it to the user instead
+    If the bot can't send a message to the channel,
+    it will send it to the user instead
 
-    :param ctx: commands.Context - The context of the command
-    :type ctx: commands.Context
+    :param ctx: The context of the command
     :param message: The message to send
-    :type message: str
     :return: The return value of the function.
     """
     try:
@@ -165,7 +164,7 @@ class Log(commands.Cog,
     @commands.Cog.listener()
     async def on_ready(self):
         self.start_time = time.time()
-        if config.application_id:
+        if self.bot.application_id:
             await self.bot.tree.sync()
         _logger.info(f"Bot loaded, ready to use (prefix '{self.bot.command_prefix}')")
 

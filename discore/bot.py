@@ -20,6 +20,7 @@ config = get_config()
 
 _logger = logging.getLogger(__name__.split(".")[0])
 
+
 class Bot(commands.Bot):
     """
     The class representing the Discord bot
@@ -50,7 +51,6 @@ class Bot(commands.Bot):
             description=kwargs.pop('description', config.description) or None,
             intents=kwargs.pop('intents', discord.Intents.all()),
             help_command=kwargs.pop('help_command', EmbedHelpCommand(command_attrs=config.help.meta)),
-            application_id=kwargs.pop('application_id', config.application_id) or None,
             **kwargs
         )
 
