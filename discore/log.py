@@ -109,7 +109,8 @@ class Log(commands.Cog,
             invite = None
 
         if config.log.channel:
-            embed = discord.Embed(title="Bug raised")
+            embed = discord.Embed(
+                title="Bug raised", color=config.color or None)
             embed.set_footer(
                 text=f"{self.bot.user.name}" + (f" | ver. {config.version}" if config.version else ""),
                 icon_url=self.bot.user.display_avatar.url
