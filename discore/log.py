@@ -170,9 +170,8 @@ class Log(commands.Cog,
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
-        if config.application_id:
-            # TODO: precise the guild to update
-            await self.bot.tree.sync()
+        if self.bot.application_id:
+            await self.bot.tree.sync(guild=guild)
 
     @commands.Cog.listener()
     async def on_disconnect(self):
