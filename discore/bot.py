@@ -63,14 +63,12 @@ class Bot(commands.Bot):
             **kwargs
         )
 
-        asyncio.run(self._load_cogs(kwargs.pop('log', Log(self))))
+        asyncio.run(self._load_cogs())
 
-    async def _load_cogs(self, log):
+    async def _load_cogs(self):
         """
         loads dynamically the cogs found in the /cog folder and the log cog
         """
-
-        await self.add_cog(log)
 
         if path.isdir("cogs"):
             for file in os.listdir("cogs"):
