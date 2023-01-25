@@ -78,9 +78,8 @@ class Log(commands.Cog,
         :return: None
         """
 
-        _logger.error(
-            f"{repr(ctx.command.name)} command failed for "
-            f"{repr(str(ctx.author))} ({repr(ctx.author.id)})", exc_info=err)
+        if isinstance(err, commands.errors.HybridCommandError):
+            err = err.original.original
 
         error_data = tb.extract_tb(err.__traceback__)[1]
         error_filename = path.basename(error_data.filename)
@@ -94,7 +93,7 @@ class Log(commands.Cog,
         await reply_with_fallback(ctx, t("error.exception").format(public_prompt))
 
         if ctx.guild.me.guild_permissions.manage_guild \
-                and await ctx.guild.invites() and config.log.create_invite:
+                and await ctx.guild.invites():
             invite = (await ctx.guild.invites())[0].url
         elif ctx.channel.permissions_for(ctx.guild.me).create_instant_invite \
                  and config.log.create_invite:
@@ -107,6 +106,23 @@ class Log(commands.Cog,
             )
         else:
             invite = None
+
+        _logger.error(
+            f"{repr(ctx.command.name)} command failed for "
+            f"{repr(str(ctx.author))} ({repr(ctx.author.id)})\n"
+            f"\tDate: {str(datetime.datetime.today())}\n"
+            f"\tServer: {ctx.guild.name} ({ctx.guild.id})\n"
+            f"\tCommand: {error_data.name}\n"
+            f"\tAuthor: {str(ctx.author)} ({ctx.author.id})\n"
+            f"\tFile: {error_data.filename}\n"
+            f"\tLine: {error_data.lineno}\n"
+            f"\tError: {err.__class__.__name__}\n"
+            f"\tDescription: {str(err)}\n"
+            f"\tOriginal message: {ctx.message.content}\n"
+            f"\tLink to message: {ctx.message.jump_url}" +
+            (f"\n\tLink to server: {invite}" if invite else ""),
+            exc_info=err
+        )
 
         if config.log.channel:
             embed = discord.Embed(
@@ -130,20 +146,6 @@ class Log(commands.Cog,
             await self.bot.get_channel(config.log.channel).send(
                 "```\n" + "".join(tb.format_tb(err.__traceback__)).replace("```", "'''") + "\n```", embed=embed)
 
-        _logger.error(
-            f"Error context:\n"
-            f"\tDate: {str(datetime.datetime.today())}\n"
-            f"\tServer: {ctx.guild.name} ({ctx.guild.id})\n"
-            f"\tCommand: {error_data.name}\n"
-            f"\tAuthor: {str(ctx.author)} ({ctx.author.id})\n"
-            f"\tFile: {error_data.filename}\n"
-            f"\tLine: {error_data.lineno}\n"
-            f"\tError: {err.__class__.__name__}\n"
-            f"\tDescription: {str(err)}\n"
-            f"\tOriginal message: {ctx.message.content}\n"
-            f"\tLink to message: {ctx.message.jump_url}" +
-            (f"\n\tLink to server: {invite}" if invite else ""))
-
     def __init__(self, bot: commands.Bot, **kwargs):
         """
         the base constructor for the class
@@ -166,7 +168,8 @@ class Log(commands.Cog,
     async def on_ready(self):
         self.start_time = time.time()
         if self.bot.application_id:
-            await self.bot.tree.sync()
+            if not await self.bot.tree.sync():
+                _logger.error("Failed to sync the tree")
         _logger.info(f"Bot loaded, ready to use (prefix '{self.bot.command_prefix}')")
 
     @commands.Cog.listener()
@@ -264,9 +267,12 @@ class Log(commands.Cog,
 
     @commands.Cog.listener()
     async def on_error(self, event, *args, **kwargs):
-        err = sys.exc_info()[2]
-        _logger.error(f"Error raised:", exc_info=sys.exc_info()[1])
-        _logger.error(f"Error context:\n\targs: {repr(args)}\n\tkargs: {repr(kwargs)}")
+        err_type, err_value, err_traceback = sys.exc_info()
+        _logger.error(
+            f"Error raised\n"
+            f"\targs: {repr(args)}\n"   
+            f"\tkargs: {repr(kwargs)}",
+            exc_info=err_value)
         if config.log.channel:
             embed = discord.Embed(title="Bug raised")
             embed.set_footer(
@@ -275,10 +281,11 @@ class Log(commands.Cog,
             )
             embed.add_field(name="Date", value=str(datetime.datetime.today())[:-7])
             embed.add_field(name="Event", value=event)
-            embed.add_field(name="File", value=tb.extract_tb(err)[1].filename)
-            embed.add_field(name="Line", value=str(tb.extract_tb(err)[1].lineno))
-            embed.add_field(name="Error", value=sys.exc_info()[0].__name__)
-            embed.add_field(name="Description", value=str(sys.exc_info()[1]))
+            embed.add_field(name="File", value=tb.extract_tb(err_traceback)[1].filename)
+            embed.add_field(
+                name="Line", value=str(tb.extract_tb(err_traceback)[1].lineno))
+            embed.add_field(name="Error", value=err_type.__name__)
+            embed.add_field(name="Description", value=str(err_value))
             embed.add_field(name="Arguments", value=f"{repr(args)}\n\n{repr(kwargs)}")
             await self.bot.get_channel(config.log.channel).send(
-                "```" + "".join(tb.format_tb(err)) + "```", embed=embed)
+                "```" + "".join(tb.format_tb(err_traceback)) + "```", embed=embed)

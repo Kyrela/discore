@@ -298,7 +298,7 @@ def setup_logging(**kwargs) -> None:
 
     log_file = kwargs.pop("log_file", config.log.file)
     if log_file:
-        file_handler = logging.FileHandler(log_file)
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_formatter = given_formatter or Formatter(color=False)
         file_handler.setFormatter(file_formatter)
 
