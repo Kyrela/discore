@@ -1,15 +1,16 @@
 import string
 from typing import Union, Optional
-
 import envtoml
 import addict
 import i18n
-from discord.ext import commands
 from mergedeep import merge
 from os import path
 import os
 from dotenv import load_dotenv
 import logging
+
+import discord
+from discord.ext import commands
 
 __all__ = (
     'sformat',
@@ -17,7 +18,9 @@ __all__ = (
     'init_config',
     'setup_logging',
     'get_config',
-    't'
+    't',
+    'reply_with_fallback',
+    'get_command_usage'
 )
 
 
@@ -337,3 +340,38 @@ def t(ctx_i, key, **kwargs):
     else:
         locale = ctx_i.locale.value
     return i18n.t(key, locale=locale, **kwargs)
+
+
+async def reply_with_fallback(ctx: commands.Context, message: str):
+    """
+    Try to reply to a message, if it fails, send it as a normal message
+
+    :param ctx: The context of the command
+    :param message: The message to send
+    :return: The return value of the function.
+    """
+    try:
+        return await ctx.reply(message, mention_author=False)
+    except discord.errors.HTTPException:
+        return await ctx.send(message)
+
+
+def get_command_usage(prefix: str, command: commands.Command) -> str:
+    """
+    returns a command usage text for users
+
+    :param prefix: the bot prefix
+    :param command: the command on which the usage should be got
+    :return: the command usage
+    """
+    parent = command.full_parent_name
+    if len(command.aliases) > 0:
+        aliases = '|'.join(command.aliases)
+        fmt = f'[{command.name}|{aliases}]'
+        if parent:
+            fmt = parent + ' ' + fmt
+        alias = fmt
+    else:
+        alias = command.name if not parent else parent + ' ' + command.name
+
+    return f'{prefix}{alias} {command.signature}'
