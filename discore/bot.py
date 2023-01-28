@@ -9,6 +9,7 @@ from os import path
 import logging
 import time
 from textwrap import shorten
+from typing import Union
 from i18n import t
 from datetime import datetime
 import traceback as tb
@@ -223,11 +224,12 @@ class Bot(commands.Bot):
         elif not isinstance(error, commands.CommandNotFound):
             if isinstance(error, commands.CommandInvokeError):
                 error = error.original
-            await self._command_error(ctx, error)
+            await self._log_command_error(ctx, error)
 
-    async def _command_error(self, ctx: commands.Context, err: Exception):
+    async def _log_command_error(self, ctx: commands.Context, err: Exception):
         """
-        Sends the internal command error to the raising channel and to the error channel
+        Sends the internal command error to the raising channel and to the
+        error channel
 
         :param ctx: the context of the command invocation
         :param err: the raised error
@@ -242,96 +244,102 @@ class Bot(commands.Bot):
         public_prompt = (
             f"File {error_filename!r}, "
             f"line {error_data.lineno}, "
-            f"command {repr(error_data.name)}\n"
-            f"{err.__class__.__name__} : {err}"
+            f"command {error_data.name!r}\n"
+            f"{type(err).__name__} : {err}"
         )
 
-        await reply_with_fallback(ctx, t("error.exception").format(public_prompt))
+        await reply_with_fallback(
+            ctx, t("error.exception").format(public_prompt))
+
+        data: dict[str] = {
+            "Server": f"{ctx.guild.name} ({ctx.guild.id})",
+            "Command": ctx.command.name,
+            "Author": f"{str(ctx.author)} ({ctx.author.id})",
+            "Original message": ctx.message.content,
+            "Link to message": ctx.message.jump_url,
+        }
 
         if (ctx.guild.me.guild_permissions.manage_guild
                 and await ctx.guild.invites()):
-            invite = (await ctx.guild.invites())[0].url
+            data["Invite"] = (await ctx.guild.invites())[0].url
         elif (ctx.channel.permissions_for(ctx.guild.me).create_instant_invite
                 and config.log.create_invite):
-            invite = await ctx.channel.create_invite(
+            data["Invite"] = await ctx.channel.create_invite(
                 reason=t("error.invite_message"),
                 max_age=86400,
                 max_uses=1,
                 temporary=True,
-                unique=False
-            )
-        else:
-            invite = None
+                unique=False)
 
-        _log.error(
-            f"{repr(ctx.command.name)} command failed for "
-            f"{repr(str(ctx.author))} ({repr(ctx.author.id)})\n"
-            f"\tDate: {datetime.today().strftime(config.log.date_format)}\n"
-            f"\tServer: {ctx.guild.name} ({ctx.guild.id})\n"
-            f"\tCommand: {error_data.name}\n"
-            f"\tAuthor: {str(ctx.author)} ({ctx.author.id})\n"
-            f"\tFile: {error_data.filename}\n"
-            f"\tLine: {error_data.lineno}\n"
-            f"\tError: {err.__class__.__name__}\n"
-            f"\tDescription: {str(err)}\n"
-            f"\tOriginal message: {ctx.message.content}\n"
-            f"\tLink to message: {ctx.message.jump_url}" +
-            (f"\n\tLink to server: {invite}" if invite else ""),
-            exc_info=err
+        await self._log_data(
+            f"{ctx.command.name!r} command failed for {str(ctx.author)!r} "
+            f"({ctx.author.id!r})", data,
+            exc_info=(type(err), err, err.__traceback__))
+
+    async def _log_data(
+            self, message: str, data: dict, level: int = logging.ERROR,
+            exc_info: Union[bool | tuple] = True) -> None:
+        """
+        Logs data to the console and to the log channel
+
+        :param message: The message to log
+        :param data: The contextual information to log
+        :param level: The level of the log
+        :param exc_info: The exception information, if any
+        :return: None
+        """
+
+        if exc_info is True:
+            exc_info = sys.exc_info()
+
+        traceback = message
+        data["Date"] = datetime.today().strftime(config.log.date_format)
+
+        if exc_info:
+            err_type, err_value, err_traceback = exc_info
+            tb_infos = tb.extract_tb(err_traceback)[1]
+            traceback = (
+                "```\n"
+                + "".join(tb.format_tb(err_traceback)).replace("```", "'''")
+                + "".join(tb.format_exception_only(err_type, err_value))
+                + "\n```")
+
+            data["File"] = tb_infos.filename
+            data["Line"] = tb_infos.lineno
+            data["Error"] = err_type.__name__
+            data["Description"] = str(err_value)
+
+        _log.log(
+            level,
+            (
+                message + "\n"
+                + "\n".join(
+                    f"\t{key}: {value!r}" for key, value in data.items())
+            ),
+            exc_info=exc_info
         )
 
-        if config.log.channel:
-            embed = discord.Embed(
-                title="Bug raised", color=config.color or None)
-            embed.set_footer(
-                text=self.user.name + (
-                    f" | ver. {config.version}" if config.version else ""),
-                icon_url=self.user.display_avatar.url
-            )
-            embed.add_field(name="Date", value=datetime.today().strftime(
-                config.log.date_format))
-            embed.add_field(name="Server",
-                            value=f"{ctx.guild.name} ({ctx.guild.id})")
-            embed.add_field(name="Command", value=error_data.name)
-            embed.add_field(name="Author",
-                            value=f"{str(ctx.author)} ({ctx.author.id})")
-            embed.add_field(name="File", value=error_data.filename)
-            embed.add_field(name="Line", value=str(error_data.lineno))
-            embed.add_field(name="Error", value=type(err).__name__)
-            embed.add_field(name="Description", value=str(err))
-            embed.add_field(name="Original message", value=ctx.message.content)
-            embed.add_field(name="Link to message", value=ctx.message.jump_url)
-            if invite:
-                embed.add_field(name="Link to server", value=invite)
+        if not config.log.channel:
+            return
 
-            traceback = "".join(tb.format_tb(err.__traceback__)).replace("```", "'''")
-            await self.get_channel(config.log.channel).send(
-                f"```\n{traceback}\n```", embed=embed)
+        embed = discord.Embed(title=message, color=config.color or None)
+        embed.set_footer(
+            text=self.user.name + (
+                f" | ver. {config.version}" if config.version else ""),
+            icon_url=self.user.display_avatar.url
+        )
+
+        for key, value in data.items():
+            embed.add_field(name=key, value=value, inline=False)
+
+        await self.get_channel(config.log.channel).send(traceback, embed=embed)
 
     async def on_error(self, event, *args, **kwargs):
-        err_type, err_value, err_traceback = sys.exc_info()
-        tb_infos = tb.extract_tb(err_traceback)[1]
-        traceback = "".join(tb.format_tb(err_traceback)).replace("```", "'''")
-        _log.error(
-            f"Error raised\n"
-            f"\targs: {repr(args)}\n"
-            f"\tkargs: {repr(kwargs)}",
-            exc_info=err_value)
-        if config.log.channel:
-            embed = discord.Embed(title="Bug raised")
-            embed.set_footer(
-                text=self.user.name + (
-                    f" | ver. {config.version}" if config.version else ""),
-                icon_url=self.user.display_avatar.url
-            )
-            embed.add_field(name="Date", value=datetime.today().strftime(
-                config.log.date_format))
-            embed.add_field(name="Event", value=event)
-            embed.add_field(name="File", value=tb_infos.filename)
-            embed.add_field(
-                name="Line", value=str(tb_infos.lineno))
-            embed.add_field(name="Error", value=err_type.__name__)
-            embed.add_field(name="Description", value=str(err_value))
-            embed.add_field(name="Arguments", value=f"{args!r}\n\n{kwargs!r}")
-            await self.get_channel(config.log.channel).send(
-                f"```\n{traceback}\n```", embed=embed)
+        await self._log_data(
+            "Error raised",
+            {
+                "Event": event,
+                "Arguments": repr(args),
+                "Keyword arguments": repr(kwargs)
+            }
+        )
