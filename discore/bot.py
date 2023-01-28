@@ -118,7 +118,7 @@ class Bot(commands.Bot):
 
     async def on_connect(self):
         _log.info(
-            f"Connected to Discord as {self.user.name!r}"
+            f"Connected to Discord as {self.user.name!r} "
             f"(id : {self.user.id!r})"
             + (f" ver. {config.version}" if config.version else ""))
 
@@ -140,20 +140,32 @@ class Bot(commands.Bot):
         _log.info("Bot resumed")
 
     async def on_command(self, ctx: commands.Context):
+        if ctx.interaction:
+            _log.info(
+                f"{ctx.command.name!r} slash command request sent by "
+                f"{str(ctx.author)!r} ({ctx.author.id!r}) with invocation "
+                f"{str(ctx.kwargs)!r}")
+            return
         _log.info(
             f"{ctx.command.name!r} command request sent by {str(ctx.author)!r} "
-            f"({ctx.author.id!r}) with invocation "
-            f"{ctx.message.content[len(self.command_prefix):]!r}")
+            f"({ctx.author.id!r}) with invocation {ctx.message.content!r}")
 
     async def on_command_completion(self, ctx: commands.Context):
+
         rep = None
-        message_log_infos = []
-        async for message in ctx.history(limit=5):
-            if (message.author == ctx.me
-                    and message.reference
-                    and message.reference.message_id == ctx.message.id):
-                rep = message
-                break
+        message_log_infos = [
+            f"{ctx.command.name!r} {'slash ' if ctx.interaction else ''}"
+            f"command succeeded for {str(ctx.author)!r} ({ctx.author.id!r})"]
+
+        if ctx.interaction:
+            rep = await ctx.interaction.original_response()
+        else:
+            async for message in ctx.history(limit=5):
+                if (message.author == ctx.me
+                        and message.reference
+                        and message.reference.message_id == ctx.message.id):
+                    rep = message
+                    break
         if rep:
             message_log_infos += [" with a response"]
             if rep.content:
@@ -172,10 +184,7 @@ class Bot(commands.Bot):
                     f"containing an file with name "
                     f"{attachment.filename!r} (url {attachment.url!r})"]
 
-        _log.info(
-            f"{ctx.command.name!r} command succeeded for {str(ctx.author)!r} "
-            f"({ctx.author.id!r})"
-            + ", ".join(message_log_infos))
+        _log.info(", ".join(message_log_infos))
 
     async def on_command_error(self, ctx, error: Exception):
         if (isinstance(error, commands.ConversionError)
@@ -272,9 +281,9 @@ class Bot(commands.Bot):
                 unique=False)
 
         await self._log_data(
-            f"{ctx.command.name!r} command failed for {str(ctx.author)!r} "
-            f"({ctx.author.id!r})", data,
-            exc_info=(type(err), err, err.__traceback__))
+            f"{ctx.command.name!r} {'slash ' if ctx.interaction else ''}"
+            f"command failed for {str(ctx.author)!r} ({ctx.author.id!r})",
+            data, exc_info=(type(err), err, err.__traceback__))
 
     async def _log_data(
             self, message: str, data: dict, level: int = logging.ERROR,
