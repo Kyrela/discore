@@ -11,6 +11,7 @@ import logging
 
 import discord
 from discord.ext import commands
+from discord import app_commands
 
 __all__ = (
     'sformat',
@@ -20,7 +21,8 @@ __all__ = (
     'get_config',
     't',
     'reply_with_fallback',
-    'get_command_usage'
+    'get_command_usage',
+    'get_app_command_usage'
 )
 
 
@@ -375,3 +377,14 @@ def get_command_usage(prefix: str, command: commands.Command) -> str:
         alias = command.name if not parent else parent + ' ' + command.name
 
     return f'{prefix}{alias} {command.signature}'
+
+
+def get_app_command_usage(command: app_commands.Command):
+    """
+    returns a command usage text for users
+
+    :param command: the command on which the usage should be got
+    :return: the command usage
+    """
+
+    return f'/{command.qualified_name} {" ".join(param.display_name for param in command.parameters)}'

@@ -20,7 +20,7 @@ en-US:
       not_found: "Command `{}` has no subcommand named `{}`"
       no_subcommand: "Command `{}` has no subcommands."
 
-  error:
+  command_error:
     bad_argument: "One or more arguments are incorrect.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
     missing_argument: "One or more arguments are missing.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
     not_found: "Sorry, I couldn't find anything that matched what you indicated."
@@ -28,7 +28,15 @@ en-US:
     invite_message: "A bug has occurred. This invitation will allow, if needed, the developer to access the server, to understand why the bug occurred. This invitation is limited to one use, grants only the status of temporary member, and lasts maximum 1 day."
     on_cooldown: "This command is on cooldown. Try again in {:.1f} seconds."
     invalid_quoted_string: "Sorry, but I couldn't correctly process the arguments. Maybe you forgot to put a space after a closing quote ?"
-    bot:
-      missing_permission: "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
-    user:
-      missing_permission: "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
+    bot_missing_permission: "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
+    user_missing_permission: "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
+
+  app_error:
+    transformer: "The argument `{}` is incorrect.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
+    no_private_message: "This command cannot be used in private messages."
+    missing_role: "You need the role `{}` to use this command."
+    missing_any_role: "You need one of the following roles to use this command: `{}`."
+    missing_permissions: "You need the following permissions to use this command: `{}`."
+    bot_missing_permissions: "I need the following permissions to use this command: `{}`."
+    cooldown: "This command is on cooldown. Try again in {:.1f} seconds."
+    command_not_found: "Command not found, please refresh your discord client."

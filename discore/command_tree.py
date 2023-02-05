@@ -1,0 +1,142 @@
+"""
+The class that represent the bot's command tree
+"""
+
+import logging
+
+from discord import *
+from discord import app_commands
+
+from .utils import t, get_app_command_usage
+
+
+__all__ = ('CommandTree',)
+
+_log = logging.getLogger(__name__)
+
+
+class CommandTree(app_commands.CommandTree):
+    """
+    A class that represents the bot's command tree.
+    """
+    def __init__(self, bot):
+        super().__init__(bot)
+
+    async def on_error(
+            self, interaction: Interaction, error: app_commands.AppCommandError) -> None:
+        """|coro|
+
+        A callback that is called when any command raises an :exc:`AppCommandError`.
+
+        The default implementation logs the exception using the library logger,
+        send the exception full context to the log channel if provided, and
+        send a message to the user if configured to do so.
+
+        To get the command that failed, :attr:`discord.Interaction.command` should
+        be used.
+
+        Parameters
+        -----------
+        interaction: :class:`~discord.Interaction`
+            The interaction that is being handled.
+        error: :exc:`AppCommandError`
+            The exception that was raised.
+        """
+
+        command = interaction.command
+        if command is not None and command._has_any_error_handlers():
+            return
+
+        is_error_handled = False
+
+        if isinstance(command, app_commands.Command):
+            is_error_handled = await self._on_command_error(interaction, error)
+        elif isinstance(command, app_commands.ContextMenu):
+            is_error_handled = await self._on_context_menu_error(interaction, error)
+        elif command is None:
+            is_error_handled = await self._on_other_error(interaction, error)
+
+        if not is_error_handled:
+            is_error_handled = await self._on_generic_error(interaction, error)
+
+        if is_error_handled:
+            _log.error(
+                f"Unhandled command error{' on command ' + command.qualified_name if command else ''}\n"
+                + "\n".join(f'\t{key!r}: {value!r}' for key, value in interaction.__dict__.items()),
+                exc_info=error)
+
+    async def _on_command_error(
+                self, interaction: Interaction, error: app_commands.AppCommandError) -> bool:
+
+        command = interaction.command
+
+        if not isinstance(command, app_commands.Command):
+            return False
+
+        if isinstance(error, app_commands.TransformerError):
+            interaction.response.send_message(
+                t(interaction, 'command.app_error.transformer').format(
+                    error.value,
+                    get_app_command_usage(command),
+                    "/help " + command.qualified_name))
+            return True
+        if isinstance(error, app_commands.NoPrivateMessage):
+            interaction.response.send_message(
+                t(interaction, 'command.app_error.no_private_message'))
+            return True
+        if isinstance(error, app_commands.MissingRole):
+            interaction.response.send_message(
+                t(interaction, 'command.app_error.missing_role').format(
+                    error.missing_role))
+            return True
+        if isinstance(error, app_commands.MissingAnyRole):
+            interaction.response.send_message(
+                t(interaction, 'command.app_error.missing_any_role').format(
+                    ", ".join(error.missing_roles)))
+            return True
+        if isinstance(error, app_commands.MissingPermissions):
+            interaction.response.send_message(
+                t(interaction, 'command.app_error.missing_permissions').format(
+                    ", ".join(error.missing_permissions)))
+            return True
+        if isinstance(error, app_commands.BotMissingPermissions):
+            interaction.response.send_message(
+                t(interaction, 'command.app_error.bot_missing_permissions').format(
+                    ", ".join(error.missing_permissions)))
+            return True
+        if isinstance(error, app_commands.CommandOnCooldown):
+            interaction.response.send_message(
+                t(interaction, 'command.app_error.cooldown').format(
+                    error.retry_after))
+            return True
+
+        return False
+
+    async def _on_context_menu_error(
+                self, interaction: Interaction, error: app_commands.AppCommandError) -> bool:
+
+        context_menu = interaction.command
+
+        if not isinstance(context_menu, app_commands.ContextMenu):
+            return False
+
+        return False
+
+    async def _on_other_error(
+                self, interaction: Interaction, error: app_commands.AppCommandError) -> bool:
+
+        if interaction.command is not None:
+            return False
+
+        return False
+
+    async def _on_generic_error(
+                self, interaction: Interaction, error: app_commands.AppCommandError) -> bool:
+
+        if isinstance(error, app_commands.CommandNotFound):
+            await self.sync(guild=interaction.guild)
+            interaction.response.send_message(
+                t(interaction, 'command.app_error.command_not_found'))
+            return True
+
+        return False

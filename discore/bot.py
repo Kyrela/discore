@@ -18,6 +18,7 @@ from discord.ext import commands
 import discord
 
 from .help import EmbedHelpCommand
+from .command_tree import CommandTree
 from .utils import (
     init_config, setup_logging, get_config,
     reply_with_fallback, get_command_usage)
@@ -26,7 +27,7 @@ __all__ = ('Bot', 'config')
 
 config = get_config()
 
-_log = logging.getLogger(__name__.split(".")[0])
+_log = logging.getLogger(__name__)
 
 
 class Bot(commands.Bot):
@@ -53,7 +54,7 @@ class Bot(commands.Bot):
         config = init_config(**kwargs)
         setup_logging(**kwargs)
         global _log
-        _log = logging.getLogger(__name__.split(".")[0])
+        _log = logging.getLogger(__name__)
         _log.info("Bot initialising...")
 
         super().__init__(
@@ -61,6 +62,7 @@ class Bot(commands.Bot):
             description=kwargs.pop('description', config.description) or None,
             intents=kwargs.pop('intents', discord.Intents.all()),
             help_command=kwargs.pop('help_command', EmbedHelpCommand(command_attrs=config.help.meta)),
+            tree_cls=kwargs.pop('tree_cls', CommandTree),
             **kwargs
         )
 
@@ -187,9 +189,18 @@ class Bot(commands.Bot):
         _log.info(", ".join(message_log_infos))
 
     async def on_command_error(self, ctx, error: Exception):
-        if (isinstance(error, commands.ConversionError)
-                or isinstance(error, commands.BadArgument)):
-            await reply_with_fallback(ctx, t("error.bad_argument").format(
+
+        if self.extra_events.get('on_command_error', None):
+            return
+
+        if ctx.command and ctx.command.has_error_handler():
+            return
+
+        if ctx.cog and ctx.cog.has_error_handler():
+            return
+
+        if isinstance(error, (commands.ConversionError, commands.BadArgument)):
+            await reply_with_fallback(ctx, t("command_error.bad_argument").format(
                 get_command_usage(self.command_prefix, ctx.command),
                 self.command_prefix + "help " + ctx.command.name))
             _log.warning(
@@ -197,7 +208,7 @@ class Bot(commands.Bot):
                 f" {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Bad arguments given")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await reply_with_fallback(ctx, t("error.missing_argument").format(
+            await reply_with_fallback(ctx, t("command_error.missing_argument").format(
                 get_command_usage(self.command_prefix, ctx.command),
                 self.command_prefix + "help " + ctx.command.name))
             _log.warning(
@@ -205,35 +216,39 @@ class Bot(commands.Bot):
                 f"Missing required argument")
         elif (isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden)) or \
                 isinstance(error, commands.BotMissingPermissions):
-            await reply_with_fallback(ctx, t("error.bot.missing_permission"))
+            await reply_with_fallback(ctx, t("command_error.bot_missing_permission"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Bot is missing permissions")
         elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.NotFound):
-            await reply_with_fallback(ctx, t("error.not_found"))
+            await reply_with_fallback(ctx, t("command_error.not_found"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"No matches for the request")
-        elif isinstance(error, commands.NotOwner) or isinstance(error, commands.NotOwner) or \
-                isinstance(error, commands.MissingPermissions):
-            await reply_with_fallback(ctx, t("error.user.missing_permission"))
+        elif isinstance(error, (commands.NotOwner, commands.MissingPermissions)):
+            await reply_with_fallback(ctx, t("command_error.user_missing_permission"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"User is missing permissions")
         elif isinstance(error, commands.CommandOnCooldown):
-            await reply_with_fallback(ctx, t("error.on_cooldown").format(error.retry_after))
+            await reply_with_fallback(ctx, t("command_error.on_cooldown").format(error.retry_after))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"On cooldown")
         elif isinstance(error, commands.InvalidEndOfQuotedStringError):
-            await reply_with_fallback(ctx, t("error.invalid_quoted_string"))
+            await reply_with_fallback(ctx, t("command_error.invalid_quoted_string"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Invalid quoted string")
-        elif not isinstance(error, commands.CommandNotFound):
-            if isinstance(error, commands.CommandInvokeError):
-                error = error.original
-            await self._log_command_error(ctx, error)
+        elif isinstance(error, commands.CommandNotFound):
+            return
+        elif isinstance(error, commands.CommandInvokeError):
+            await self._log_command_error(ctx, error.original)
+        else:
+            _log.error(
+                f"Unhandled command error{' on command ' + ctx.command.name if ctx.command else ''}\n"
+                + "\n".join(f'\t{key!r}: {value!r}' for key, value in ctx.__dict__.items()),
+                exc_info=error)
 
     async def _log_command_error(self, ctx: commands.Context, err: Exception):
         """
@@ -287,7 +302,7 @@ class Bot(commands.Bot):
 
     async def _log_data(
             self, message: str, data: dict, level: int = logging.ERROR,
-            exc_info: Union[bool | tuple] = True) -> None:
+            exc_info: Union[bool, tuple] = True) -> None:
         """
         Logs data to the console and to the log channel
 
@@ -352,3 +367,29 @@ class Bot(commands.Bot):
                 "Keyword arguments": repr(kwargs)
             }
         )
+
+    async def on_app_command_completion(
+            self, i: discord.Interaction, command: discord.app_commands.Command):
+        message_log_infos = [
+            f"{command.qualified_name!r} app command succeeded for "
+            f"{str(i.user.name)!r} ({i.user.id!r}) with a response"]
+
+        rep: discord.InteractionMessage = await i.original_response()
+        message_log_infos += [" with a response"]
+        if rep.clean_content:
+            short_content = shorten(
+                repr(rep.clean_content)[1:-1], width=120, placeholder='...')
+            message_log_infos += [
+                f"starting with the text '{short_content}'"]
+        for embed in rep.embeds:
+            short_content = shorten(
+                repr(embed.description)[1:-1], width=120, placeholder='...')
+            message_log_infos += [
+                f"containing an embed with name {embed.title!r}, "
+                f"and with description starting with '{short_content}'"]
+        for attachment in rep.attachments:
+            message_log_infos += [
+                f"containing an file with name "
+                f"{attachment.filename!r} (url {attachment.url!r})"]
+
+        _log.info(", ".join(message_log_infos))
