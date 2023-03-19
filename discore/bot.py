@@ -71,6 +71,8 @@ class Bot(commands.Bot):
         loads dynamically the cogs found in the /cog folder and the log cog
         """
 
+        help_cog_name = config.help.meta.cog or None
+
         if path.isdir("cogs"):
             for file in os.listdir("cogs"):
 
@@ -82,14 +84,13 @@ class Bot(commands.Bot):
                 new_cog = eval(f"{cog_name.title()}(self)")
                 await self.add_cog(new_cog)
 
-                help_cog_name = config.help.meta.cog or None
                 if help_cog_name and help_cog_name.title() == cog_name.title():
                     self.help_command.cog = new_cog
                 _log.info(f"Cog {cog_name!r} loaded")
 
-        if config.help.meta.cog and not self.help_command.cog:
+        if help_cog_name and not self.help_command.cog:
             raise ModuleNotFoundError(
-                f"The cog {config.help.meta.cog!r}, required by the help command, wasn't found")
+                f"The cog {help_cog_name!r}, required by the help command, wasn't found")
 
     def run(self, token=None, **kwargs):
         """
