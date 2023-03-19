@@ -400,5 +400,5 @@ def sanitize(text: str, limit=4000) -> str:
     :param limit: The maximum length of the text
     """
 
-    sanitized_text = repr(text.replace("```", "'''"))[1:-1]
+    sanitized_text = text.replace("```", "'''")
     return _shorten(sanitized_text, width=limit, placeholder='...')
