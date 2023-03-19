@@ -317,11 +317,11 @@ class Bot(commands.Bot):
         if exc_info:
             err_type, err_value, err_traceback = exc_info
             tb_infos = tb.extract_tb(err_traceback)[1]
-            traceback = (
-                "```\n"
-                + "".join(tb.format_tb(err_traceback)).replace("```", "'''")
-                + "".join(tb.format_exception_only(err_type, err_value))
-                + "\n```")
+            unenclosed_tb = (
+                    "".join(tb.format_tb(err_traceback))
+                    + "".join(tb.format_exception_only(err_type, err_value)))
+
+            traceback = f"```\n{sanitize(unenclosed_tb, 1992)}\n```"
 
             data["File"] = tb_infos.filename
             data["Line"] = tb_infos.lineno
