@@ -287,7 +287,7 @@ class Bot(commands.Bot):
                 and ctx.channel.permissions_for(ctx.guild.me).create_instant_invite):
             data["Invite"] = await ctx.channel.create_invite(
                 reason=t("error.invite_message"),
-                max_age=86400,
+                max_age=604800,
                 max_uses=1,
                 temporary=True,
                 unique=False)
