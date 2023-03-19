@@ -8,7 +8,6 @@ from os import path
 import os
 from dotenv import load_dotenv
 import logging
-from textwrap import shorten as _shorten
 
 import discord
 from discord.ext import commands
@@ -392,13 +391,19 @@ def get_app_command_usage(command: app_commands.Command):
     return f'/{command.qualified_name} {" ".join(param.display_name for param in command.parameters)}'
 
 
-def sanitize(text: str, limit=4000) -> str:
+def sanitize(text: str, limit=4000, crop_at_end: bool = True) -> str:
     """
     Sanitize a string to be displayed in Discord, and shorten it if needed
 
     :param text: The text to sanitize
     :param limit: The maximum length of the text
+    :param crop_at_end: Whether to crop the text at the end or at the start
     """
 
     sanitized_text = text.replace("```", "'''")
-    return _shorten(sanitized_text, width=limit, placeholder='...')
+    text_len = len(sanitized_text)
+    if text_len > limit:
+        if crop_at_end:
+            return sanitized_text[:limit - 3] + "..."
+        return "..." + sanitized_text[text_len - limit + 3:]
+    return sanitized_text
