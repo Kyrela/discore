@@ -283,11 +283,8 @@ class Bot(commands.Bot):
             "Link to message": ctx.message.jump_url,
         }
 
-        if (ctx.guild.me.guild_permissions.manage_guild
-                and await ctx.guild.invites()):
-            data["Invite"] = (await ctx.guild.invites())[0].url
-        elif (ctx.channel.permissions_for(ctx.guild.me).create_instant_invite
-                and config.log.create_invite):
+        if (config.log.create_invite
+                and ctx.channel.permissions_for(ctx.guild.me).create_instant_invite):
             data["Invite"] = await ctx.channel.create_invite(
                 reason=t("error.invite_message"),
                 max_age=86400,
