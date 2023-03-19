@@ -8,7 +8,6 @@ import sys
 from os import path
 import logging
 import time
-from textwrap import shorten
 from typing import Union
 from i18n import t
 from datetime import datetime
@@ -21,7 +20,8 @@ from .help import EmbedHelpCommand
 from .command_tree import CommandTree
 from .utils import (
     init_config, setup_logging, get_config,
-    reply_with_fallback, get_command_usage)
+    reply_with_fallback, get_command_usage,
+    sanitize)
 
 __all__ = ('Bot', 'config')
 
@@ -171,13 +171,11 @@ class Bot(commands.Bot):
         if rep:
             message_log_infos += [" with a response"]
             if rep.content:
-                short_content = shorten(
-                    repr(rep.content)[1:-1], width=120, placeholder='...')
+                short_content = sanitize(rep.content, 120)
                 message_log_infos += [
                     f"starting with the text '{short_content}'"]
             for embed in rep.embeds:
-                short_content = shorten(
-                    repr(embed.description)[1:-1], width=120, placeholder='...')
+                short_content = sanitize(embed.description, 120)
                 message_log_infos += [
                     f"containing an embed with name {embed.title!r}, "
                     f"and with description starting with '{short_content}'"]
@@ -374,13 +372,11 @@ class Bot(commands.Bot):
         rep: discord.InteractionMessage = await i.original_response()
         message_log_infos += [" with a response"]
         if rep.clean_content:
-            short_content = shorten(
-                repr(rep.clean_content)[1:-1], width=120, placeholder='...')
+            short_content = sanitize(rep.clean_content(), 120)
             message_log_infos += [
                 f"starting with the text '{short_content}'"]
         for embed in rep.embeds:
-            short_content = shorten(
-                repr(embed.description)[1:-1], width=120, placeholder='...')
+            short_content = sanitize(embed.description, 120)
             message_log_infos += [
                 f"containing an embed with name {embed.title!r}, "
                 f"and with description starting with '{short_content}'"]

@@ -8,6 +8,7 @@ from os import path
 import os
 from dotenv import load_dotenv
 import logging
+from textwrap import shorten as _shorten
 
 import discord
 from discord.ext import commands
@@ -22,7 +23,8 @@ __all__ = (
     't',
     'reply_with_fallback',
     'get_command_usage',
-    'get_app_command_usage'
+    'get_app_command_usage',
+    'sanitize',
 )
 
 
@@ -388,3 +390,15 @@ def get_app_command_usage(command: app_commands.Command):
     """
 
     return f'/{command.qualified_name} {" ".join(param.display_name for param in command.parameters)}'
+
+
+def sanitize(text: str, limit=4000) -> str:
+    """
+    Sanitize a string to be displayed in Discord, and shorten it if needed
+
+    :param text: The text to sanitize
+    :param limit: The maximum length of the text
+    """
+
+    sanitized_text = repr(text.replace("```", "'''"))[1:-1]
+    return _shorten(sanitized_text, width=limit, placeholder='...')
