@@ -197,6 +197,18 @@ class Bot(commands.Bot):
         if ctx.cog and ctx.cog.has_error_handler():
             return
 
+        await self.handle_error(ctx, error)
+
+    async def handle_error(self, ctx: commands.Context, error: Exception) -> None:
+        """
+        Automatically handles the errors following the error and the context,
+        and sends a message to the user with a proper message
+
+        :param ctx: The context of the command
+        :param error: The error raised
+        :return: None
+        """
+
         if isinstance(error, (commands.ConversionError, commands.BadArgument)):
             await reply_with_fallback(ctx, t("command_error.bad_argument").format(
                 get_command_usage(self.command_prefix, ctx.command),
