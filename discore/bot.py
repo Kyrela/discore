@@ -209,6 +209,9 @@ class Bot(commands.Bot):
         :return: None
         """
 
+        if isinstance(error, commands.HybridCommandError):
+            error = error.original
+
         if isinstance(error, (commands.ConversionError, commands.BadArgument)):
             await reply_with_fallback(ctx, t("command_error.bad_argument").format(
                 get_command_usage(self.command_prefix, ctx.command),
@@ -252,7 +255,7 @@ class Bot(commands.Bot):
                 f"Invalid quoted string")
         elif isinstance(error, commands.CommandNotFound):
             return
-        elif isinstance(error, commands.CommandInvokeError):
+        elif isinstance(error, commands.CommandInvokeError) or isinstance(error, discord.app_commands.CommandInvokeError):
             await self._log_command_error(ctx, error.original)
         else:
             _log.error(
@@ -270,9 +273,6 @@ class Bot(commands.Bot):
         :return: None
         """
 
-        if isinstance(err, commands.errors.HybridCommandError):
-            err = err.original.original
-
         error_data = tb.extract_tb(err.__traceback__)[1]
         error_filename = path.basename(error_data.filename)
         public_prompt = (
@@ -283,7 +283,7 @@ class Bot(commands.Bot):
         )
 
         await reply_with_fallback(
-            ctx, t("error.exception").format(public_prompt))
+            ctx, t("command_error.exception").format(public_prompt))
 
         data: dict[str] = {
             "Server": f"{ctx.guild.name} ({ctx.guild.id})",
@@ -296,7 +296,7 @@ class Bot(commands.Bot):
         if (config.log.create_invite
                 and ctx.channel.permissions_for(ctx.guild.me).create_instant_invite):
             data["Invite"] = await ctx.channel.create_invite(
-                reason=t("error.invite_message"),
+                reason=t("command_error.invite_message"),
                 max_age=604800,
                 max_uses=1,
                 temporary=True,
