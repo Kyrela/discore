@@ -100,7 +100,7 @@ class SparseFormatter(string.Formatter):
                     # expand the format spec, if needed
                     format_spec, auto_arg_index = self._vformat(
                         format_spec, args, kwargs,
-                        used_args, recursion_depth-1,
+                        used_args, recursion_depth - 1,
                         auto_arg_index=auto_arg_index)
 
                     # format the object and append to the result
@@ -380,7 +380,7 @@ def get_command_usage(prefix: str, command: commands.Command) -> str:
     return f'{prefix}{alias} {command.signature}'
 
 
-def get_app_command_usage(command: app_commands.Command):
+def get_app_command_usage(command: Union[app_commands.Command, app_commands.ContextMenu]):
     """
     returns a command usage text for users
 
@@ -388,7 +388,13 @@ def get_app_command_usage(command: app_commands.Command):
     :return: the command usage
     """
 
-    return f'/{command.qualified_name} {" ".join(param.display_name for param in command.parameters)}'
+    return (
+        '/'
+        + command.qualified_name
+        + ' '
+        + ' '.join(
+            param.display_name for param
+            in (command.parameters if isinstance(command, app_commands.Command) else [])))
 
 
 def sanitize(text: str, limit=4000, crop_at_end: bool = True) -> str:
