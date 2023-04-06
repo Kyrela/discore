@@ -59,10 +59,11 @@ class CommandTree(app_commands.CommandTree):
         if not is_error_handled:
             is_error_handled = await self._on_generic_error(interaction, error)
 
-        if is_error_handled:
+        if not is_error_handled:
             _log.error(
                 f"Unhandled command error{' on command ' + command.qualified_name if command else ''}\n"
-                + "\n".join(f'\t{key!r}: {value!r}' for key, value in interaction.__dict__.items()),
+                + "\n".join(f'\t{attr!r}: {interaction.__getattribute__(attr)!r}' for attr in interaction.__slots__
+                            if attr[0] != '_'),
                 exc_info=error)
 
     async def _on_command_error(
@@ -74,39 +75,39 @@ class CommandTree(app_commands.CommandTree):
             return False
 
         if isinstance(error, app_commands.TransformerError):
-            interaction.response.send_message(
-                t(interaction, 'command.app_error.transformer').format(
+            await interaction.response.send_message(
+                t(interaction, 'app_error.transformer').format(
                     error.value,
                     get_app_command_usage(command),
                     "/help " + command.qualified_name))
             return True
         if isinstance(error, app_commands.NoPrivateMessage):
-            interaction.response.send_message(
-                t(interaction, 'command.app_error.no_private_message'))
+            await interaction.response.send_message(
+                t(interaction, 'app_error.no_private_message'))
             return True
         if isinstance(error, app_commands.MissingRole):
-            interaction.response.send_message(
-                t(interaction, 'command.app_error.missing_role').format(
+            await interaction.response.send_message(
+                t(interaction, 'app_error.missing_role').format(
                     error.missing_role))
             return True
         if isinstance(error, app_commands.MissingAnyRole):
-            interaction.response.send_message(
-                t(interaction, 'command.app_error.missing_any_role').format(
+            await interaction.response.send_message(
+                t(interaction, 'app_error.missing_any_role').format(
                     ", ".join(error.missing_roles)))
             return True
         if isinstance(error, app_commands.MissingPermissions):
-            interaction.response.send_message(
-                t(interaction, 'command.app_error.missing_permissions').format(
+            await interaction.response.send_message(
+                t(interaction, 'app_error.missing_permissions').format(
                     ", ".join(error.missing_permissions)))
             return True
         if isinstance(error, app_commands.BotMissingPermissions):
-            interaction.response.send_message(
-                t(interaction, 'command.app_error.bot_missing_permissions').format(
+            await interaction.response.send_message(
+                t(interaction, 'app_error.bot_missing_permissions').format(
                     ", ".join(error.missing_permissions)))
             return True
         if isinstance(error, app_commands.CommandOnCooldown):
-            interaction.response.send_message(
-                t(interaction, 'command.app_error.cooldown').format(
+            await interaction.response.send_message(
+                t(interaction, 'app_error.cooldown').format(
                     error.retry_after))
             return True
 
@@ -135,8 +136,8 @@ class CommandTree(app_commands.CommandTree):
 
         if isinstance(error, app_commands.CommandNotFound):
             await self.sync(guild=interaction.guild)
-            interaction.response.send_message(
-                t(interaction, 'command.app_error.command_not_found'))
+            await interaction.response.send_message(
+                t(interaction, 'app_error.command_not_found'))
             return True
 
         return False
