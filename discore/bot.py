@@ -273,7 +273,15 @@ class Bot(commands.Bot):
         )
 
     async def on_app_command_completion(
-            self, i: discord.Interaction, command: discord.app_commands.Command):
+            self, i: discord.Interaction, command: discord.app_commands.Command) -> None:
+        """
+        Logs the completion of an app command
+
+        :param i: The interaction
+        :param command: The command that was completed
+        :return: None
+        """
+
         message_log_infos = [
             f"{command.qualified_name!r} app command succeeded for "
             f"{str(i.user.name)!r} ({i.user.id!r}) with a response"]
