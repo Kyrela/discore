@@ -6,6 +6,9 @@ import i18n
 from mergedeep import merge
 from os import path
 import os
+from datetime import datetime
+import sys
+import traceback as tb
 from dotenv import load_dotenv
 import logging
 
@@ -24,6 +27,8 @@ __all__ = (
     'get_command_usage',
     'get_app_command_usage',
     'sanitize',
+    'log_command_error',
+    'log_data',
 )
 
 
@@ -345,18 +350,24 @@ def t(ctx_i, key, **kwargs):
     return i18n.t(key, locale=locale, **kwargs)
 
 
-async def reply_with_fallback(ctx: commands.Context, message: str):
+async def reply_with_fallback(ctx_i: Union[commands.Context, discord.Interaction], message: str):
     """
     Try to reply to a message, if it fails, send it as a normal message
 
-    :param ctx: The context of the command
+    :param ctx_i: The context or interaction of the command
     :param message: The message to send
     :return: The return value of the function.
     """
-    try:
-        return await ctx.reply(message, mention_author=False)
-    except discord.errors.HTTPException:
-        return await ctx.send(message)
+
+    if isinstance(ctx_i, commands.Context):
+        try:
+            return await ctx_i.reply(message, mention_author=False)
+        except discord.errors.HTTPException:
+            return await ctx_i.send(message)
+
+    if ctx_i.response.is_done():
+        return await ctx_i.channel.send(message)
+    await ctx_i.response.send_message(message, ephemeral=True)
 
 
 def get_command_usage(prefix: str, command: commands.Command) -> str:
@@ -389,12 +400,12 @@ def get_app_command_usage(command: Union[app_commands.Command, app_commands.Cont
     """
 
     return (
-        '/'
-        + command.qualified_name
-        + ' '
-        + ' '.join(
-            param.display_name for param
-            in (command.parameters if isinstance(command, app_commands.Command) else [])))
+            '/'
+            + command.qualified_name
+            + ' '
+            + ' '.join(
+        param.display_name for param
+        in (command.parameters if isinstance(command, app_commands.Command) else [])))
 
 
 def sanitize(text: str, limit=4000, crop_at_end: bool = True) -> str:
@@ -413,3 +424,118 @@ def sanitize(text: str, limit=4000, crop_at_end: bool = True) -> str:
             return sanitized_text[:limit - 3] + "..."
         return "..." + sanitized_text[text_len - limit + 3:]
     return sanitized_text
+
+
+async def log_command_error(
+        bot: commands.Bot, ctx_i: Union[commands.Context, discord.Interaction], err: Exception,
+        logger: logging.Logger = logging.getLogger(__name__)) -> None:
+    """
+    Sends the internal command error to the raising channel and to the
+    error channel
+
+    :param bot: the bot instance
+    :param ctx_i: the context/interaction of the command
+    :param err: the raised error
+    :param logger: the logger to use
+    :return: None
+    """
+
+    error_data = tb.extract_tb(err.__traceback__)[1]
+    error_filename = path.basename(error_data.filename)
+    public_prompt = (
+        f"File {error_filename!r}, "
+        f"line {error_data.lineno}, "
+        f"command {error_data.name!r}\n"
+        f"{type(err).__name__} : {err}"
+    )
+
+    await reply_with_fallback(
+        ctx_i, t(ctx_i, "command_error.exception").format(public_prompt))
+
+    user = ctx_i.author if isinstance(ctx_i, commands.Context) else ctx_i.user
+
+    data: dict[str] = {
+        "Server": f"{ctx_i.guild.name} ({ctx_i.guild.id})",
+        "Command": ctx_i.command.name,
+        "Author": f"{str(user)} ({user.id})",
+        "Original message": ctx_i.message.content,
+        "Link to message": ctx_i.message.jump_url,
+    }
+
+    if (config.log.create_invite
+            and ctx_i.channel.permissions_for(ctx_i.guild.me).create_instant_invite):
+        data["Invite"] = await ctx_i.channel.create_invite(
+            reason=t(ctx_i, "command_error.invite_message"),
+            max_age=604800,
+            max_uses=1,
+            temporary=True,
+            unique=False)
+
+    await log_data(
+        bot,
+        f"{ctx_i.command.name!r} {'slash ' if ctx_i.interaction else ''}"
+        f"command failed for {str(user)!r} ({user.id!r})",
+        data, logger=logger, exc_info=(type(err), err, err.__traceback__))
+
+
+async def log_data(
+        bot: commands.Bot, message: str, data: dict,
+        logger: logging.Logger = logging.getLogger(__name__),
+        level: int = logging.ERROR,
+        exc_info: Union[bool, tuple] = True) -> None:
+    """
+    Logs data to the console and to the log channel
+
+    :param bot: The bot instance
+    :param message: The message to log
+    :param data: The contextual information to log
+    :param logger: The logger to use
+    :param level: The level of the log
+    :param exc_info: The exception information, if any
+    :return: None
+    """
+
+    if exc_info is True:
+        exc_info = sys.exc_info()
+
+    traceback = message
+    data["Date"] = datetime.today().strftime(config.log.date_format)
+
+    if exc_info:
+        err_type, err_value, err_traceback = exc_info
+        tb_infos = tb.extract_tb(err_traceback)[1]
+        unenclosed_tb = (
+                "".join(tb.format_tb(err_traceback))
+                + "".join(tb.format_exception_only(err_type, err_value)))
+
+        traceback = f"```\n{sanitize(unenclosed_tb, 1992)}\n```"
+
+        data["File"] = tb_infos.filename
+        data["Line"] = tb_infos.lineno
+        data["Error"] = err_type.__name__
+        data["Description"] = str(err_value)
+
+    logger.log(
+        level,
+        (
+            message + "\n"
+            + "\n".join(
+                f"\t{key}: {value!r}" for key, value in data.items())
+        ),
+        exc_info=exc_info
+    )
+
+    if not config.log.channel:
+        return
+
+    embed = discord.Embed(title=message, color=config.color or None)
+    embed.set_footer(
+        text=bot.user.name + (
+            f" | ver. {config.version}" if config.version else ""),
+        icon_url=bot.user.display_avatar.url
+    )
+
+    for key, value in data.items():
+        embed.add_field(name=key, value=value, inline=False)
+
+    await bot.get_channel(config.log.channel).send(traceback, embed=embed)

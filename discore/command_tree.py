@@ -7,12 +7,13 @@ import logging
 from discord import *
 from discord import app_commands
 
-from .utils import t, get_app_command_usage
-
+from .utils import t, get_app_command_usage, get_config, log_command_error
 
 __all__ = ('CommandTree',)
 
 _log = logging.getLogger(__name__)
+
+config = get_config()
 
 
 class CommandTree(app_commands.CommandTree):
@@ -20,6 +21,8 @@ class CommandTree(app_commands.CommandTree):
     A class that represents the bot's command tree.
     """
     def __init__(self, bot):
+        global config
+        config = get_config()
         super().__init__(bot)
 
     async def on_error(
@@ -65,38 +68,36 @@ class CommandTree(app_commands.CommandTree):
             await interaction.response.send_message(t(interaction, 'app_error.transformer').format(
                 error.value,
                 (get_app_command_usage(command) if command else ''),
-                "/help " + (command.qualified_name if command else '')))
+                "/help " + (command.qualified_name if command else '')), ephemeral=True)
         elif isinstance(error, app_commands.NoPrivateMessage):
             await interaction.response.send_message(
-                t(interaction, 'app_error.no_private_message'))
+                t(interaction, 'app_error.no_private_message'), ephemeral=True)
         elif isinstance(error, app_commands.MissingRole):
             await interaction.response.send_message(
                 t(interaction, 'app_error.missing_role').format(
-                    error.missing_role))
+                    error.missing_role), ephemeral=True)
         elif isinstance(error, app_commands.MissingAnyRole):
             await interaction.response.send_message(
                 t(interaction, 'app_error.missing_any_role').format(
-                    ", ".join(error.missing_roles)))
+                    ", ".join(error.missing_roles)), ephemeral=True)
         elif isinstance(error, app_commands.MissingPermissions):
             await interaction.response.send_message(
                 t(interaction, 'app_error.missing_permissions').format(
-                    ", ".join(error.missing_permissions)))
+                    ", ".join(error.missing_permissions)), ephemeral=True)
         elif isinstance(error, app_commands.BotMissingPermissions):
             await interaction.response.send_message(
                 t(interaction, 'app_error.bot_missing_permissions').format(
-                    ", ".join(error.missing_permissions)))
+                    ", ".join(error.missing_permissions)), ephemeral=True)
         elif isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(
                 t(interaction, 'app_error.cooldown').format(
-                    error.retry_after))
+                    error.retry_after), ephemeral=True)
         elif isinstance(error, app_commands.CommandNotFound):
             await self.sync(guild=interaction.guild)
             await interaction.response.send_message(
-                t(interaction, 'app_error.command_not_found'))
-        elif isinstance(error, app_commands.CommandNotFound):
-            await self.sync(guild=interaction.guild)
-            await interaction.response.send_message(
-                t(interaction, 'app_error.command_not_found'))
+                t(interaction, 'app_error.command_not_found'), ephemeral=True)
+        elif isinstance(error, app_commands.CommandInvokeError):
+            await log_command_error(self.client, interaction, error.original, logger=_log)
         else:
             _log.error(
                 f"Unhandled command error{' on command ' + command.qualified_name if command else ''}\n"

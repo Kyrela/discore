@@ -4,14 +4,10 @@ The class representing the Discord bot
 
 import asyncio
 import os
-import sys
 from os import path
 import logging
 import time
-from typing import Union
 from i18n import t
-from datetime import datetime
-import traceback as tb
 
 from discord.ext import commands
 import discord
@@ -21,7 +17,7 @@ from .command_tree import CommandTree
 from .utils import (
     init_config, setup_logging, get_config,
     reply_with_fallback, get_command_usage,
-    sanitize)
+    sanitize, log_command_error, log_data)
 
 __all__ = ('Bot', 'config')
 
@@ -255,124 +251,25 @@ class Bot(commands.Bot):
                 f"Invalid quoted string")
         elif isinstance(error, commands.CommandNotFound):
             return
-        elif isinstance(error, commands.CommandInvokeError) or isinstance(error, discord.app_commands.CommandInvokeError):
-            await self._log_command_error(ctx, error.original)
+        elif (isinstance(error, commands.CommandInvokeError)
+              or isinstance(error, discord.app_commands.CommandInvokeError)):
+            await log_command_error(self, ctx, error.original, logger=_log)
         else:
             _log.error(
                 f"Unhandled command error{' on command ' + ctx.command.name if ctx.command else ''}\n"
                 + "\n".join(f'\t{key!r}: {value!r}' for key, value in ctx.__dict__.items()),
                 exc_info=error)
 
-    async def _log_command_error(self, ctx: commands.Context, err: Exception):
-        """
-        Sends the internal command error to the raising channel and to the
-        error channel
-
-        :param ctx: the context of the command invocation
-        :param err: the raised error
-        :return: None
-        """
-
-        error_data = tb.extract_tb(err.__traceback__)[1]
-        error_filename = path.basename(error_data.filename)
-        public_prompt = (
-            f"File {error_filename!r}, "
-            f"line {error_data.lineno}, "
-            f"command {error_data.name!r}\n"
-            f"{type(err).__name__} : {err}"
-        )
-
-        await reply_with_fallback(
-            ctx, t("command_error.exception").format(public_prompt))
-
-        data: dict[str] = {
-            "Server": f"{ctx.guild.name} ({ctx.guild.id})",
-            "Command": ctx.command.name,
-            "Author": f"{str(ctx.author)} ({ctx.author.id})",
-            "Original message": ctx.message.content,
-            "Link to message": ctx.message.jump_url,
-        }
-
-        if (config.log.create_invite
-                and ctx.channel.permissions_for(ctx.guild.me).create_instant_invite):
-            data["Invite"] = await ctx.channel.create_invite(
-                reason=t("command_error.invite_message"),
-                max_age=604800,
-                max_uses=1,
-                temporary=True,
-                unique=False)
-
-        await self._log_data(
-            f"{ctx.command.name!r} {'slash ' if ctx.interaction else ''}"
-            f"command failed for {str(ctx.author)!r} ({ctx.author.id!r})",
-            data, exc_info=(type(err), err, err.__traceback__))
-
-    async def _log_data(
-            self, message: str, data: dict, level: int = logging.ERROR,
-            exc_info: Union[bool, tuple] = True) -> None:
-        """
-        Logs data to the console and to the log channel
-
-        :param message: The message to log
-        :param data: The contextual information to log
-        :param level: The level of the log
-        :param exc_info: The exception information, if any
-        :return: None
-        """
-
-        if exc_info is True:
-            exc_info = sys.exc_info()
-
-        traceback = message
-        data["Date"] = datetime.today().strftime(config.log.date_format)
-
-        if exc_info:
-            err_type, err_value, err_traceback = exc_info
-            tb_infos = tb.extract_tb(err_traceback)[1]
-            unenclosed_tb = (
-                    "".join(tb.format_tb(err_traceback))
-                    + "".join(tb.format_exception_only(err_type, err_value)))
-
-            traceback = f"```\n{sanitize(unenclosed_tb, 1992)}\n```"
-
-            data["File"] = tb_infos.filename
-            data["Line"] = tb_infos.lineno
-            data["Error"] = err_type.__name__
-            data["Description"] = str(err_value)
-
-        _log.log(
-            level,
-            (
-                message + "\n"
-                + "\n".join(
-                    f"\t{key}: {value!r}" for key, value in data.items())
-            ),
-            exc_info=exc_info
-        )
-
-        if not config.log.channel:
-            return
-
-        embed = discord.Embed(title=message, color=config.color or None)
-        embed.set_footer(
-            text=self.user.name + (
-                f" | ver. {config.version}" if config.version else ""),
-            icon_url=self.user.display_avatar.url
-        )
-
-        for key, value in data.items():
-            embed.add_field(name=key, value=value, inline=False)
-
-        await self.get_channel(config.log.channel).send(traceback, embed=embed)
-
     async def on_error(self, event, *args, **kwargs):
-        await self._log_data(
+        await log_data(
+            self,
             "Error raised",
             {
                 "Event": event,
                 "Arguments": repr(args),
                 "Keyword arguments": repr(kwargs)
-            }
+            },
+            logger=_log
         )
 
     async def on_app_command_completion(
