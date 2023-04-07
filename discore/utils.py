@@ -458,9 +458,10 @@ async def log_command_error(
         "Server": f"{ctx_i.guild.name} ({ctx_i.guild.id})",
         "Command": ctx_i.command.name,
         "Author": f"{str(user)} ({user.id})",
-        "Original message": ctx_i.message.content,
-        "Link to message": ctx_i.message.jump_url,
     }
+    if isinstance(ctx_i, commands.Context):
+        data["Original message"] = ctx_i.message.content
+        data["Link to message"] = ctx_i.message.jump_url
 
     if (config.log.create_invite
             and ctx_i.channel.permissions_for(ctx_i.guild.me).create_instant_invite):
@@ -473,7 +474,8 @@ async def log_command_error(
 
     await log_data(
         bot,
-        f"{ctx_i.command.name!r} {'slash ' if ctx_i.interaction else ''}"
+        f"{ctx_i.command.name!r} "
+        f"{'app ' if isinstance(ctx_i, discord.Interaction) or ctx_i.interaction else ''}"
         f"command failed for {str(user)!r} ({user.id!r})",
         data, logger=logger, exc_info=(type(err), err, err.__traceback__))
 

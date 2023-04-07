@@ -140,7 +140,7 @@ class Bot(commands.Bot):
     async def on_command(self, ctx: commands.Context):
         if ctx.interaction:
             _log.info(
-                f"{ctx.command.name!r} slash command request sent by "
+                f"{ctx.command.name!r} app command request sent by "
                 f"{str(ctx.author)!r} ({ctx.author.id!r}) with invocation "
                 f"{str(ctx.kwargs)!r}")
             return
@@ -150,9 +150,12 @@ class Bot(commands.Bot):
 
     async def on_command_completion(self, ctx: commands.Context):
 
+        if ctx.interaction:
+            return
+
         rep = None
         message_log_infos = [
-            f"{ctx.command.name!r} {'slash ' if ctx.interaction else ''}"
+            f"{ctx.command.name!r} {'app ' if ctx.interaction else ''}"
             f"command succeeded for {str(ctx.author)!r} ({ctx.author.id!r})"]
 
         if ctx.interaction:
@@ -165,7 +168,7 @@ class Bot(commands.Bot):
                     rep = message
                     break
         if rep:
-            message_log_infos += [" with a response"]
+            message_log_infos.append("with a response")
             if rep.content:
                 short_content = sanitize(rep.content, 120)
                 message_log_infos += [
@@ -284,12 +287,12 @@ class Bot(commands.Bot):
 
         message_log_infos = [
             f"{command.qualified_name!r} app command succeeded for "
-            f"{str(i.user.name)!r} ({i.user.id!r}) with a response"]
+            f"{str(i.user)!r} ({i.user.id!r})"]
 
         rep: discord.InteractionMessage = await i.original_response()
-        message_log_infos += [" with a response"]
+        message_log_infos.append("with a response")
         if rep.clean_content:
-            short_content = sanitize(rep.clean_content(), 120)
+            short_content = sanitize(rep.clean_content, 120)
             message_log_infos += [
                 f"starting with the text '{short_content}'"]
         for embed in rep.embeds:
