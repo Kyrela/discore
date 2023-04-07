@@ -5,6 +5,7 @@ Copyright (c) 2022 Kyrela
 """
 
 from discord import *
+from discord import app_commands
 from discord.ext.commands import *
 from discord.ext.tasks import *
 

@@ -6,7 +6,7 @@ color = 0x202225
     root = true
     format = "[{asctime}] {levelformat} {name}: {message}"
     date_format = "%d/%m/%Y %H:%M:%S"
-    create_invite = true
+    create_invite = false
     [log.level_format]
         debug = "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
         info = "[{blue}{bold}INFO{no_bold}{normal}]    "

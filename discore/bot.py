@@ -4,29 +4,26 @@ The class representing the Discord bot
 
 import asyncio
 import os
-import sys
 from os import path
 import logging
 import time
-from textwrap import shorten
-from typing import Union
 from i18n import t
-from datetime import datetime
-import traceback as tb
 
 from discord.ext import commands
 import discord
 
 from .help import EmbedHelpCommand
+from .command_tree import CommandTree
 from .utils import (
     init_config, setup_logging, get_config,
-    reply_with_fallback, get_command_usage)
+    reply_with_fallback, get_command_usage,
+    sanitize, log_command_error, log_data)
 
 __all__ = ('Bot', 'config')
 
 config = get_config()
 
-_log = logging.getLogger(__name__.split(".")[0])
+_log = logging.getLogger(__name__)
 
 
 class Bot(commands.Bot):
@@ -53,7 +50,7 @@ class Bot(commands.Bot):
         config = init_config(**kwargs)
         setup_logging(**kwargs)
         global _log
-        _log = logging.getLogger(__name__.split(".")[0])
+        _log = logging.getLogger(__name__)
         _log.info("Bot initialising...")
 
         super().__init__(
@@ -61,6 +58,7 @@ class Bot(commands.Bot):
             description=kwargs.pop('description', config.description) or None,
             intents=kwargs.pop('intents', discord.Intents.all()),
             help_command=kwargs.pop('help_command', EmbedHelpCommand(command_attrs=config.help.meta)),
+            tree_cls=kwargs.pop('tree_cls', CommandTree),
             **kwargs
         )
 
@@ -143,7 +141,7 @@ class Bot(commands.Bot):
     async def on_command(self, ctx: commands.Context):
         if ctx.interaction:
             _log.info(
-                f"{ctx.command.name!r} slash command request sent by "
+                f"{ctx.command.name!r} app command request sent by "
                 f"{str(ctx.author)!r} ({ctx.author.id!r}) with invocation "
                 f"{str(ctx.kwargs)!r}")
             return
@@ -153,9 +151,12 @@ class Bot(commands.Bot):
 
     async def on_command_completion(self, ctx: commands.Context):
 
+        if ctx.interaction:
+            return
+
         rep = None
         message_log_infos = [
-            f"{ctx.command.name!r} {'slash ' if ctx.interaction else ''}"
+            f"{ctx.command.name!r} {'app ' if ctx.interaction else ''}"
             f"command succeeded for {str(ctx.author)!r} ({ctx.author.id!r})"]
 
         if ctx.interaction:
@@ -168,15 +169,13 @@ class Bot(commands.Bot):
                     rep = message
                     break
         if rep:
-            message_log_infos += [" with a response"]
+            message_log_infos.append("with a response")
             if rep.content:
-                short_content = shorten(
-                    repr(rep.content)[1:-1], width=120, placeholder='...')
+                short_content = sanitize(rep.content, 120)
                 message_log_infos += [
                     f"starting with the text '{short_content}'"]
             for embed in rep.embeds:
-                short_content = shorten(
-                    repr(embed.description)[1:-1], width=120, placeholder='...')
+                short_content = sanitize(embed.description, 120)
                 message_log_infos += [
                     f"containing an embed with name {embed.title!r}, "
                     f"and with description starting with '{short_content}'"]
@@ -188,9 +187,33 @@ class Bot(commands.Bot):
         _log.info(", ".join(message_log_infos))
 
     async def on_command_error(self, ctx, error: Exception):
-        if (isinstance(error, commands.ConversionError)
-                or isinstance(error, commands.BadArgument)):
-            await reply_with_fallback(ctx, t("error.bad_argument").format(
+
+        if self.extra_events.get('on_command_error', None):
+            return
+
+        if ctx.command and ctx.command.has_error_handler():
+            return
+
+        if ctx.cog and ctx.cog.has_error_handler():
+            return
+
+        await self.handle_error(ctx, error)
+
+    async def handle_error(self, ctx: commands.Context, error: Exception) -> None:
+        """
+        Automatically handles the errors following the error and the context,
+        and sends a message to the user with a proper message
+
+        :param ctx: The context of the command
+        :param error: The error raised
+        :return: None
+        """
+
+        if isinstance(error, commands.HybridCommandError):
+            error = error.original
+
+        if isinstance(error, (commands.ConversionError, commands.BadArgument)):
+            await reply_with_fallback(ctx, t("command_error.bad_argument").format(
                 get_command_usage(self.command_prefix, ctx.command),
                 self.command_prefix + "help " + ctx.command.name))
             _log.warning(
@@ -198,7 +221,7 @@ class Bot(commands.Bot):
                 f" {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Bad arguments given")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await reply_with_fallback(ctx, t("error.missing_argument").format(
+            await reply_with_fallback(ctx, t("command_error.missing_argument").format(
                 get_command_usage(self.command_prefix, ctx.command),
                 self.command_prefix + "help " + ctx.command.name))
             _log.warning(
@@ -206,150 +229,81 @@ class Bot(commands.Bot):
                 f"Missing required argument")
         elif (isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden)) or \
                 isinstance(error, commands.BotMissingPermissions):
-            await reply_with_fallback(ctx, t("error.bot.missing_permission"))
+            await reply_with_fallback(ctx, t("command_error.bot_missing_permission"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Bot is missing permissions")
         elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.NotFound):
-            await reply_with_fallback(ctx, t("error.not_found"))
+            await reply_with_fallback(ctx, t("command_error.not_found"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"No matches for the request")
-        elif isinstance(error, commands.NotOwner) or isinstance(error, commands.NotOwner) or \
-                isinstance(error, commands.MissingPermissions):
-            await reply_with_fallback(ctx, t("error.user.missing_permission"))
+        elif isinstance(error, (commands.NotOwner, commands.MissingPermissions)):
+            await reply_with_fallback(ctx, t("command_error.user_missing_permission"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"User is missing permissions")
         elif isinstance(error, commands.CommandOnCooldown):
-            await reply_with_fallback(ctx, t("error.on_cooldown").format(error.retry_after))
+            await reply_with_fallback(ctx, t("command_error.on_cooldown").format(error.retry_after))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"On cooldown")
         elif isinstance(error, commands.InvalidEndOfQuotedStringError):
-            await reply_with_fallback(ctx, t("error.invalid_quoted_string"))
+            await reply_with_fallback(ctx, t("command_error.invalid_quoted_string"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Invalid quoted string")
-        elif not isinstance(error, commands.CommandNotFound):
-            if isinstance(error, commands.CommandInvokeError):
-                error = error.original
-            await self._log_command_error(ctx, error)
-
-    async def _log_command_error(self, ctx: commands.Context, err: Exception):
-        """
-        Sends the internal command error to the raising channel and to the
-        error channel
-
-        :param ctx: the context of the command invocation
-        :param err: the raised error
-        :return: None
-        """
-
-        if isinstance(err, commands.errors.HybridCommandError):
-            err = err.original.original
-
-        error_data = tb.extract_tb(err.__traceback__)[1]
-        error_filename = path.basename(error_data.filename)
-        public_prompt = (
-            f"File {error_filename!r}, "
-            f"line {error_data.lineno}, "
-            f"command {error_data.name!r}\n"
-            f"{type(err).__name__} : {err}"
-        )
-
-        await reply_with_fallback(
-            ctx, t("error.exception").format(public_prompt))
-
-        data: dict[str] = {
-            "Server": f"{ctx.guild.name} ({ctx.guild.id})",
-            "Command": ctx.command.name,
-            "Author": f"{str(ctx.author)} ({ctx.author.id})",
-            "Original message": ctx.message.content,
-            "Link to message": ctx.message.jump_url,
-        }
-
-        if (ctx.guild.me.guild_permissions.manage_guild
-                and await ctx.guild.invites()):
-            data["Invite"] = (await ctx.guild.invites())[0].url
-        elif (ctx.channel.permissions_for(ctx.guild.me).create_instant_invite
-                and config.log.create_invite):
-            data["Invite"] = await ctx.channel.create_invite(
-                reason=t("error.invite_message"),
-                max_age=86400,
-                max_uses=1,
-                temporary=True,
-                unique=False)
-
-        await self._log_data(
-            f"{ctx.command.name!r} {'slash ' if ctx.interaction else ''}"
-            f"command failed for {str(ctx.author)!r} ({ctx.author.id!r})",
-            data, exc_info=(type(err), err, err.__traceback__))
-
-    async def _log_data(
-            self, message: str, data: dict, level: int = logging.ERROR,
-            exc_info: Union[bool | tuple] = True) -> None:
-        """
-        Logs data to the console and to the log channel
-
-        :param message: The message to log
-        :param data: The contextual information to log
-        :param level: The level of the log
-        :param exc_info: The exception information, if any
-        :return: None
-        """
-
-        if exc_info is True:
-            exc_info = sys.exc_info()
-
-        traceback = message
-        data["Date"] = datetime.today().strftime(config.log.date_format)
-
-        if exc_info:
-            err_type, err_value, err_traceback = exc_info
-            tb_infos = tb.extract_tb(err_traceback)[1]
-            traceback = (
-                "```\n"
-                + "".join(tb.format_tb(err_traceback)).replace("```", "'''")
-                + "".join(tb.format_exception_only(err_type, err_value))
-                + "\n```")
-
-            data["File"] = tb_infos.filename
-            data["Line"] = tb_infos.lineno
-            data["Error"] = err_type.__name__
-            data["Description"] = str(err_value)
-
-        _log.log(
-            level,
-            (
-                message + "\n"
-                + "\n".join(
-                    f"\t{key}: {value!r}" for key, value in data.items())
-            ),
-            exc_info=exc_info
-        )
-
-        if not config.log.channel:
+        elif isinstance(error, commands.CommandNotFound):
             return
-
-        embed = discord.Embed(title=message, color=config.color or None)
-        embed.set_footer(
-            text=self.user.name + (
-                f" | ver. {config.version}" if config.version else ""),
-            icon_url=self.user.display_avatar.url
-        )
-
-        for key, value in data.items():
-            embed.add_field(name=key, value=value, inline=False)
-
-        await self.get_channel(config.log.channel).send(traceback, embed=embed)
+        elif (isinstance(error, commands.CommandInvokeError)
+              or isinstance(error, discord.app_commands.CommandInvokeError)):
+            await log_command_error(self, ctx, error.original, logger=_log)
+        else:
+            _log.error(
+                f"Unhandled command error{' on command ' + ctx.command.name if ctx.command else ''}\n"
+                + "\n".join(f'\t{key!r}: {value!r}' for key, value in ctx.__dict__.items()),
+                exc_info=error)
 
     async def on_error(self, event, *args, **kwargs):
-        await self._log_data(
+        await log_data(
+            self,
             "Error raised",
             {
                 "Event": event,
                 "Arguments": repr(args),
                 "Keyword arguments": repr(kwargs)
-            }
+            },
+            logger=_log
         )
+
+    async def on_app_command_completion(
+            self, i: discord.Interaction, command: discord.app_commands.Command) -> None:
+        """
+        Logs the completion of an app command
+
+        :param i: The interaction
+        :param command: The command that was completed
+        :return: None
+        """
+
+        message_log_infos = [
+            f"{command.qualified_name!r} app command succeeded for "
+            f"{str(i.user)!r} ({i.user.id!r})"]
+
+        rep: discord.InteractionMessage = await i.original_response()
+        message_log_infos.append("with a response")
+        if rep.clean_content:
+            short_content = sanitize(rep.clean_content, 120)
+            message_log_infos += [
+                f"starting with the text '{short_content}'"]
+        for embed in rep.embeds:
+            short_content = sanitize(embed.description, 120)
+            message_log_infos += [
+                f"containing an embed with name {embed.title!r}, "
+                f"and with description starting with '{short_content}'"]
+        for attachment in rep.attachments:
+            message_log_infos += [
+                f"containing an file with name "
+                f"{attachment.filename!r} (url {attachment.url!r})"]
+
+        _log.info(", ".join(message_log_infos))
