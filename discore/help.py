@@ -7,12 +7,10 @@ import itertools
 from discord.ext import commands
 import discord
 
-from .utils import get_config
+from .utils import config
 from i18n import t
 
 __all__ = ('EmbedHelpCommand',)
-
-config = get_config()
 
 
 class EmbedHelpCommand(commands.HelpCommand):
@@ -21,8 +19,6 @@ class EmbedHelpCommand(commands.HelpCommand):
     """
 
     def __init__(self, **kwargs):
-        global config
-        config = get_config()
         super().__init__(**kwargs)
 
     def get_destination(self):

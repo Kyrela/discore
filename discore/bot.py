@@ -15,13 +15,11 @@ import discord
 from .help import EmbedHelpCommand
 from .command_tree import CommandTree
 from .utils import (
-    init_config, setup_logging, get_config,
+    init_config, setup_logging, config,
     reply_with_fallback, get_command_usage,
     sanitize, log_command_error, log_data)
 
-__all__ = ('Bot', 'config')
-
-config = get_config()
+__all__ = ('Bot',)
 
 _log = logging.getLogger(__name__)
 
@@ -46,8 +44,7 @@ class Bot(commands.Bot):
 
         self.start_time = None
 
-        global config
-        config = init_config(**kwargs)
+        init_config(**kwargs)
         setup_logging(**kwargs)
         global _log
         _log = logging.getLogger(__name__)

@@ -21,7 +21,6 @@ __all__ = (
     'config',
     'init_config',
     'setup_logging',
-    'get_config',
     't',
     'reply_with_fallback',
     'get_command_usage',
@@ -158,7 +157,7 @@ def _load_config_file(configuration_file: Optional[str]) -> addict.Dict:
     return _load_config(envtoml.load(configuration_file))
 
 
-def _load_config(config: Union[dict, addict.Dict]) -> addict.Dict:
+def _load_config(config: dict) -> addict.Dict:
     """
     The configuration loader
 
@@ -176,13 +175,15 @@ def init_config(**kwargs):
     Initialize the configuration
     """
 
+    global config
+    config.clear()
+
     env_file = kwargs.pop('env_file', '.env')
     if env_file:
         load_dotenv(dotenv_path=env_file)
 
-    global config
     if 'configuration' in kwargs:
-        config = _load_config(kwargs.pop('configuration'))
+        config.update(_load_config(kwargs.pop('configuration')))
     else:
         if 'configuration_file' in kwargs:
             config_file = kwargs.pop('configuration_file')
@@ -190,12 +191,7 @@ def init_config(**kwargs):
             config_file = os.environ['DISCORE_CONFIG']
         else:
             config_file = "config.toml"
-        config = _load_config_file(config_file)
-    return config
-
-
-def get_config():
-    return config
+        config.update(_load_config_file(config_file))
 
 
 _ainsi = {

@@ -7,13 +7,11 @@ import logging
 from discord import *
 from discord import app_commands
 
-from .utils import t, get_app_command_usage, get_config, log_command_error
+from .utils import t, get_app_command_usage, log_command_error
 
 __all__ = ('CommandTree',)
 
 _log = logging.getLogger(__name__)
-
-config = get_config()
 
 
 class CommandTree(app_commands.CommandTree):
@@ -21,8 +19,6 @@ class CommandTree(app_commands.CommandTree):
     A class that represents the bot's command tree.
     """
     def __init__(self, bot):
-        global config
-        config = get_config()
         super().__init__(bot)
 
     async def on_error(
