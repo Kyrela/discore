@@ -57,6 +57,7 @@ token = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 description = "A basic test bot"
 version = "1.0"
 color = 0x35901E
+hot_reloading = true
 
 [log]
     channel = 1111111111111
@@ -105,40 +106,39 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
 
 `en-US.yml`:
 ```yaml
-en-US:
-  help:
-    no_commands: "*No commands*"
-    meta:
-      help: "Shows this message"
-      usage: "[command]"
-    bot:
-      title: "Help menu"
-      description: "Use `{} [command]` for more info on a command.\nYou can also use `{} [category]` for more info on a category."
-      no_category: "No category"
-    cog:
-      title: "{} commands"
-      commands: "Commands"
-    group:
-      title: "{} group"
-    command:
-      title: "{} command"
-      not_found: "No command called `{}` found."
-    subcommand:
-      not_found: "Command `{}` has no subcommand named `{}`"
-      no_subcommand: "Command `{}` has no subcommands."
+help:
+  no_commands: "*No commands*"
+  meta:
+    help: "Shows this message"
+    usage: "[command]"
+  bot:
+    title: "Help menu"
+    description: "Use `{} [command]` for more info on a command.\nYou can also use `{} [category]` for more info on a category."
+    no_category: "No category"
+  cog:
+    title: "{} commands"
+    commands: "Commands"
+  group:
+    title: "{} group"
+  command:
+    title: "{} command"
+    not_found: "No command called `{}` found."
+  subcommand:
+    not_found: "Command `{}` has no subcommand named `{}`"
+    no_subcommand: "Command `{}` has no subcommands."
 
-  error:
-    bad_argument: "One or more arguments are incorrect.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
-    missing_argument: "One or more arguments are missing.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
-    not_found: "Sorry, I couldn't find anything that matched what you indicated."
-    exception: "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```\n{}\n```"
-    invite_message: "A bug has occurred. This invitation will allow, if needed, the developer to access the server, to understand why the bug occurred. This invitation is limited to one use, grants only the status of temporary member, and lasts maximum 1 day."
-    on_cooldown: "This command is on cooldown. Try again in {:.1f} seconds."
-    invalid_quoted_string: "Sorry, but I couldn't correctly process the arguments. Maybe you forgot to put a space after a closing quote ?"
-    bot:
-      missing_permission: "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
-    user:
-      missing_permission: "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
+error:
+  bad_argument: "One or more arguments are incorrect.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
+  missing_argument: "One or more arguments are missing.\nTry \n```\n{}\n```\nFor more information on usage, send\n```\n{}\n```"
+  not_found: "Sorry, I couldn't find anything that matched what you indicated."
+  exception: "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```\n{}\n```"
+  invite_message: "A bug has occurred. This invitation will allow, if needed, the developer to access the server, to understand why the bug occurred. This invitation is limited to one use, grants only the status of temporary member, and lasts maximum 1 day."
+  on_cooldown: "This command is on cooldown. Try again in {:.1f} seconds."
+  invalid_quoted_string: "Sorry, but I couldn't correctly process the arguments. Maybe you forgot to put a space after a closing quote ?"
+  bot:
+    missing_permission: "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
+  user:
+    missing_permission: "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
 ```
 
 > The localisations provided here are the default one, and are used if they're not provided in the locale file.
@@ -150,12 +150,14 @@ en-US:
 - `description`: the description of the bot, if any
 - `version`: the version of the bot, if any
 - `color`: the color that should be used in embeds, if any
+- `hot_reloading`: whether or not the bot should reload the cogs when they are modified. Also describe if 
+  localisations should be loaded from memory or from the disk.
 - `log`
   - `channel`: the channel where the information and errors should be logged, if any (int)
   - `file`: the file where the information and errors should be logged, if any
   - `level`: the level of logs to be displayed in the console. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
   - `root`: whether or not the whole hierarchy of the bot should be logged
-  - `format`: the format of the logs. The following variables can be used :
+  - `format`: the format of the logs. The following variables can (but don't have to) be used:
     - `{asctime}`: the date and time of the log
     - `{name}`: the name of the logger
     - `{levelname}`: the level of the log
@@ -169,8 +171,6 @@ en-US:
     - `warning`: the format of the warning level
     - `error`: the format of the error level
     - `critical`: the format of the critical level
-
-> Note : All format arguments are optional
 
 ## List of localisation variables
 

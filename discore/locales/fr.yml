@@ -1,42 +1,41 @@
-fr:
-  help:
-    no_commands: "*Aucune commande*"
-    meta:
-      help: "Affiche ce message"
-      usage: "[commande]"
-    bot:
-      title: "Menu d'aide"
-      description: "Utilisez `{} [commande]` pour plus d'informations sur une commande.\nVous pouvez aussi utiliser `{} [catégorie]` pour plus d'informations sur une catégorie."
-      no_category: "Sans catégorie"
-    cog:
-      title: "Commandes {}"
-      commands: "Commandes"
-    group:
-      title: "Groupe {}"
-    command:
-      title: "Commande {}"
-      not_found: "Aucune commande appelée `{}` trouvée."
-    subcommand:
-      not_found: "La commande `{}` n'a pas de sous-commande appelée `{}`"
-      no_subcommand: "La commande `{}` n'a pas de sous-commandes."
+help:
+  no_commands: "*Aucune commande*"
+  meta:
+    help: "Affiche ce message"
+    usage: "[commande]"
+  bot:
+    title: "Menu d'aide"
+    description: "Utilisez `{} [commande]` pour plus d'informations sur une commande.\nVous pouvez aussi utiliser `{} [catégorie]` pour plus d'informations sur une catégorie."
+    no_category: "Sans catégorie"
+  cog:
+    title: "Commandes {}"
+    commands: "Commandes"
+  group:
+    title: "Groupe {}"
+  command:
+    title: "Commande {}"
+    not_found: "Aucune commande appelée `{}` trouvée."
+  subcommand:
+    not_found: "La commande `{}` n'a pas de sous-commande appelée `{}`"
+    no_subcommand: "La commande `{}` n'a pas de sous-commandes."
 
-  command_error:
-    bad_argument: "Un ou plusieurs arguments sont incorrects.\nEssayez \n```\n{}\n```\nPour plus d'informations sur l'utilisation, envoyez\n```\n{}\n```"
-    missing_argument: "Un ou plusieurs arguments sont manquants.\nEssayez \n```\n{}\n```\nPour plus d'informations sur l'utilisation, envoyez\n```\n{}\n```"
-    not_found: "Désolé, je n'ai rien trouvé correspondant à ce que vous avez indiqué."
-    exception: "Une erreur exceptionnelle est survenue. Le bug a été automatiquement signalé, veuillez patienter. Détail de l'erreur :```\n{}\n```"
-    invite_message: "Un bug est survenu. Cette invitation vous permettra, si besoin, d'accéder au serveur, afin de comprendre pourquoi le bug est survenu. Cette invitation est limitée à une utilisation, vous accorde uniquement le statut de membre temporaire, et dure maximum 1 jour."
-    on_cooldown: "Cette commande est en cooldown. Réessayez dans {:.1f} secondes."
-    invalid_quoted_string: "Désolé, mais je n'ai pas pu correctement traiter les arguments. Peut-être avez-vous oublié d'insérer un espace après une citation ?"
-    bot_missing_permission: "Je n'ai pas les permissions nécessaires pour effectuer cette action (rôle pas assez haut ou permission non accordée)"
-    user_missing_permission: "Vous n'avez pas les permissions nécessaires pour effectuer cette action (rôle pas assez haut ou permission non accordée)"
+command_error:
+  bad_argument: "Un ou plusieurs arguments sont incorrects.\nEssayez \n```\n{}\n```\nPour plus d'informations sur l'utilisation, envoyez\n```\n{}\n```"
+  missing_argument: "Un ou plusieurs arguments sont manquants.\nEssayez \n```\n{}\n```\nPour plus d'informations sur l'utilisation, envoyez\n```\n{}\n```"
+  not_found: "Désolé, je n'ai rien trouvé correspondant à ce que vous avez indiqué."
+  exception: "Une erreur exceptionnelle est survenue. Le bug a été automatiquement signalé, veuillez patienter. Détail de l'erreur :```\n{}\n```"
+  invite_message: "Un bug est survenu. Cette invitation vous permettra, si besoin, d'accéder au serveur, afin de comprendre pourquoi le bug est survenu. Cette invitation est limitée à une utilisation, vous accorde uniquement le statut de membre temporaire, et dure maximum 1 jour."
+  on_cooldown: "Cette commande est en cooldown. Réessayez dans {:.1f} secondes."
+  invalid_quoted_string: "Désolé, mais je n'ai pas pu correctement traiter les arguments. Peut-être avez-vous oublié d'insérer un espace après une citation ?"
+  bot_missing_permission: "Je n'ai pas les permissions nécessaires pour effectuer cette action (rôle pas assez haut ou permission non accordée)"
+  user_missing_permission: "Vous n'avez pas les permissions nécessaires pour effectuer cette action (rôle pas assez haut ou permission non accordée)"
 
-  app_error:
-    transformer: "L'argument `{}` est incorrect.\nEssayez \n```\n{}\n```\nPour plus d'informations sur l'utilisation, envoyez\n```\n{}\n```"
-    no_private_message: "Cette commande ne peut pas être utilisée en messages privés."
-    missing_role: "Vous avez besoin du rôle `{}` pour utiliser cette commande."
-    missing_any_role: "Vous avez besoin d'un des rôles suivants pour utiliser cette commande: `{}`."
-    missing_permissions: "Vous avez besoin des permissions suivantes pour utiliser cette commande: `{}`."
-    bot_missing_permissions: "J'ai besoin des permissions suivantes pour utiliser cette commande: `{}`."
-    cooldown: "Cette commande est en cooldown. Réessayez dans {:.1f} secondes."
-    command_not_found: "Cette commande non trouvée, merci de relancer votre client discord."
+app_error:
+  transformer: "L'argument `{}` est incorrect.\nEssayez \n```\n{}\n```\nPour plus d'informations sur l'utilisation, envoyez\n```\n{}\n```"
+  no_private_message: "Cette commande ne peut pas être utilisée en messages privés."
+  missing_role: "Vous avez besoin du rôle `{}` pour utiliser cette commande."
+  missing_any_role: "Vous avez besoin d'un des rôles suivants pour utiliser cette commande: `{}`."
+  missing_permissions: "Vous avez besoin des permissions suivantes pour utiliser cette commande: `{}`."
+  bot_missing_permissions: "J'ai besoin des permissions suivantes pour utiliser cette commande: `{}`."
+  cooldown: "Cette commande est en cooldown. Réessayez dans {:.1f} secondes."
+  command_not_found: "Cette commande non trouvée, merci de relancer votre client discord."

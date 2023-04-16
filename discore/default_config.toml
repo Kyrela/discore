@@ -1,5 +1,6 @@
 prefix = "!"
 color = 0x202225
+hot_reloading = true
 
 [log]
     level = "INFO"

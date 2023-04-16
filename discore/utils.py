@@ -19,8 +19,9 @@ from discord import app_commands
 __all__ = (
     'sformat',
     'config',
-    'init_config',
-    'setup_logging',
+    'config_init',
+    'logging_init',
+    'i18n_init',
     't',
     'reply_with_fallback',
     'get_command_usage',
@@ -170,7 +171,7 @@ def _load_config(config: dict) -> addict.Dict:
     return addict.Dict(merge(default_config, config))
 
 
-def init_config(**kwargs):
+def config_init(**kwargs):
     """
     Initialize the configuration
     """
@@ -289,9 +290,9 @@ class Formatter(logging.Formatter):
         return output
 
 
-def setup_logging(**kwargs) -> None:
+def logging_init(**kwargs) -> None:
     """
-    Setup the logging
+    Initialize the logging system
 
     :return: None
     """
@@ -323,13 +324,21 @@ def setup_logging(**kwargs) -> None:
         logger.setLevel(log_level)
 
 
-i18n.set('filename_format', '{locale}.{format}')
-i18n.set('file_format', 'yml')
-i18n.set('locale', 'en-US')
-i18n.set('fallback', 'en-US')
-i18n.load_path.append(path.join(path.dirname(__file__), "locales"))
-if path.exists("locales") and path.isdir("locales"):
-    i18n.load_path.append("locales")
+def i18n_init(**kwargs):
+    """
+    Initialize the i18n system
+    """
+
+    i18n.set('filename_format', kwargs.pop('filename_format', '{locale}.{format}'))
+    i18n.set('skip_locale_root_data', kwargs.pop('skip_locale_root_data', True))
+    i18n.set('file_format', kwargs.pop('file_format', 'yml'))
+    i18n.set('locale', kwargs.pop('locale', 'en-US'))
+    i18n.set('fallback', kwargs.pop('fallback', 'en-US'))
+    i18n.set('enable_memoization', kwargs.pop('enable_memoization', not config.hot_reload))
+    i18n.load_path.append(path.join(path.dirname(__file__), 'locales'))
+    locale_dir = kwargs.pop('locale_dir', 'locales')
+    if path.exists(locale_dir) and path.isdir(locale_dir):
+        i18n.load_path.append(locale_dir)
 
 
 def t(ctx_i, key, **kwargs):

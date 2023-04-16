@@ -14,10 +14,7 @@ import discord
 
 from .help import EmbedHelpCommand
 from .command_tree import CommandTree
-from .utils import (
-    init_config, setup_logging, config,
-    reply_with_fallback, get_command_usage,
-    sanitize, log_command_error, log_data)
+from .utils import *
 
 __all__ = ('Bot',)
 
@@ -44,10 +41,9 @@ class Bot(commands.Bot):
 
         self.start_time = None
 
-        init_config(**kwargs)
-        setup_logging(**kwargs)
-        global _log
-        _log = logging.getLogger(__name__)
+        config_init(**kwargs)
+        logging_init(**kwargs)
+        i18n_init(**kwargs)
         _log.info("Bot initialising...")
 
         super().__init__(
