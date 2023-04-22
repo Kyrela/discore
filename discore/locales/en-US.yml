@@ -1,8 +1,5 @@
 help:
   no_commands: "*No commands*"
-  meta:
-    help: "Shows this message"
-    usage: "[command]"
   bot:
     title: "Help menu"
     description: "Use `{} [command]` for more info on a command.\nYou can also use `{} [category]` for more info on a category."

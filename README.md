@@ -60,6 +60,18 @@ color = 0x35901E
 hot_reloading = true
 locale = "en-US"
 
+[help]
+    cog = "system"
+    name = "help"
+    help = "Shows this message"
+    description = "Shows help about the bot, a command, or a category"
+    usage = "[command | category]"
+    brief = "Shows help about the bot"
+    aliases = ["h", "hp"]
+    cooldown = 5
+    enabled = true
+    hidden = false
+
 [log]
     channel = 1111111111111
     file = "log.txt"
@@ -78,7 +90,7 @@ locale = "en-US"
 
 > Note : the log file is created if it does not exist, and all variables are optional except 'token'.
 > If a variable isn't provided, its value is set to the value showed in this example, except for
-> `log.channel`, `log.file`, `version`, `color` and `description`, as they are
+> `log.channel`, `log.file`, `version`, `color` and `description`, `help.*`, as they are
 > set to `None`. More information on used variables below.
 > You can of course store additional information in the file and access them at anytime, anywhere.
 
@@ -109,9 +121,6 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
 ```yaml
 help:
   no_commands: "*No commands*"
-  meta:
-    help: "Shows this message"
-    usage: "[command]"
   bot:
     title: "Help menu"
     description: "Use `{} [command]` for more info on a command.\nYou can also use `{} [category]` for more info on a category."
@@ -151,14 +160,27 @@ error:
 - `description`: the description of the bot, if any
 - `version`: the version of the bot, if any
 - `color`: the color that should be used in embeds, if any
+- `help_cog`: the name of the cog containing the help command. If not provided, no cog will be assigned.
 - `hot_reloading`: whether or not the bot should reload the cogs when they are modified. Also describe if 
   localisations should be loaded from memory or from the disk.
 - `locale`: The default locale of the bot, if none is found at the command's call
+- `help` : the help command's configuration - below configuration is a non-exhaustive list of the available options 
+  (passed as kwargs to the `HelpCommand` constructor)
+  - `cog`: the name of the cog to which the command should belong, if any. Correspond to the class name
+  - `name`: the name of the help command
+  - `help`: the help message for the help command
+  - `description`: the description of the help command
+  - `usage`: the usage of the help command
+  - `brief`: the short description of the help command
+  - `aliases`: the aliases of the help command
+  - `cooldown`: the cooldown of the help command
+  - `enabled`: whether the help command should be enabled
+  - `hidden`: whether the help command should be hidden
 - `log`
   - `channel`: the channel where the information and errors should be logged, if any (int)
   - `file`: the file where the information and errors should be logged, if any
   - `level`: the level of logs to be displayed in the console. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
-  - `root`: whether or not the whole hierarchy of the bot should be logged
+  - `root`: whether the whole hierarchy of the bot should be logged
   - `format`: the format of the logs. The following variables can (but don't have to) be used:
     - `{asctime}`: the date and time of the log
     - `{name}`: the name of the logger
@@ -178,12 +200,6 @@ error:
 
 - `help`
   - `no_commands`: the message that should appear when there is no commands in the bot, cog or group
-  - `meta`
-    - `cog`: the name of the cog to which the command should belong, if any. Correspond to the class name
-    - `help`: the help message for the help command
-    - `description`: the description of the help command
-    - `usage`: the usage of the help command
-    - `brief`: the short description of the help command
   - `bot`
     - `title`: the title that should appear at the top of the help message
     - `description`: the description of the help message. Can be information on his usages

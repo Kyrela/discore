@@ -1,8 +1,5 @@
 help:
   no_commands: "*Aucune commande*"
-  meta:
-    help: "Affiche ce message"
-    usage: "[commande]"
   bot:
     title: "Menu d'aide"
     description: "Utilisez `{} [commande]` pour plus d'informations sur une commande.\nVous pouvez aussi utiliser `{} [catégorie]` pour plus d'informations sur une catégorie."

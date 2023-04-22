@@ -50,7 +50,7 @@ class Bot(commands.Bot):
             command_prefix=command_prefix or config.prefix,
             description=kwargs.pop('description', config.description) or None,
             intents=kwargs.pop('intents', discord.Intents.all()),
-            help_command=kwargs.pop('help_command', EmbedHelpCommand(command_attrs=config.help.meta)),
+            help_command=kwargs.pop('help_command', EmbedHelpCommand(command_attrs=config.help)),
             tree_cls=kwargs.pop('tree_cls', CommandTree),
             **kwargs
         )
@@ -62,7 +62,7 @@ class Bot(commands.Bot):
         loads dynamically the cogs found in the /cog folder and the log cog
         """
 
-        help_cog_name = config.help.meta.cog or None
+        help_cog_name = config.help.cog or None
 
         if path.isdir("cogs"):
             for file in os.listdir("cogs"):
