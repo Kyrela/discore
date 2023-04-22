@@ -58,6 +58,7 @@ description = "A basic test bot"
 version = "1.0"
 color = 0x35901E
 hot_reloading = true
+locale = "en-US"
 
 [log]
     channel = 1111111111111
@@ -152,6 +153,7 @@ error:
 - `color`: the color that should be used in embeds, if any
 - `hot_reloading`: whether or not the bot should reload the cogs when they are modified. Also describe if 
   localisations should be loaded from memory or from the disk.
+- `locale`: The default locale of the bot, if none is found at the command's call
 - `log`
   - `channel`: the channel where the information and errors should be logged, if any (int)
   - `file`: the file where the information and errors should be logged, if any
