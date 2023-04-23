@@ -61,33 +61,34 @@ class CommandTree(app_commands.CommandTree):
         command = interaction.command
 
         if isinstance(error, app_commands.TransformerError):
-            await interaction.response.send_message(t(interaction, 'app_error.transformer').format(
-                error.value,
-                (get_app_command_usage(command) if command else ''),
-                "/help " + (command.qualified_name if command else '')), ephemeral=True)
+            await interaction.response.send_message(t(
+                interaction, 'app_error.transformer',
+                argument_value=error.value,
+                command_usage=(get_app_command_usage(command) if command is not None else ''),
+                help_command="/help " + (command.qualified_name if command else '')), ephemeral=True)
         elif isinstance(error, app_commands.NoPrivateMessage):
             await interaction.response.send_message(
                 t(interaction, 'app_error.no_private_message'), ephemeral=True)
         elif isinstance(error, app_commands.MissingRole):
-            await interaction.response.send_message(
-                t(interaction, 'app_error.missing_role').format(
-                    error.missing_role), ephemeral=True)
+            await interaction.response.send_message(t(
+                interaction, 'app_error.missing_role',
+                role=error.missing_role), ephemeral=True)
         elif isinstance(error, app_commands.MissingAnyRole):
-            await interaction.response.send_message(
-                t(interaction, 'app_error.missing_any_role').format(
-                    ", ".join(error.missing_roles)), ephemeral=True)
+            await interaction.response.send_message(t(
+                interaction, 'app_error.missing_any_role',
+                roles_list=", ".join(error.missing_roles)), ephemeral=True)
         elif isinstance(error, app_commands.MissingPermissions):
-            await interaction.response.send_message(
-                t(interaction, 'app_error.missing_permissions').format(
-                    ", ".join(error.missing_permissions)), ephemeral=True)
+            await interaction.response.send_message(t(
+                interaction, 'app_error.missing_permissions',
+                permissions_list=", ".join(error.missing_permissions)), ephemeral=True)
         elif isinstance(error, app_commands.BotMissingPermissions):
-            await interaction.response.send_message(
-                t(interaction, 'app_error.bot_missing_permissions').format(
-                    ", ".join(error.missing_permissions)), ephemeral=True)
+            await interaction.response.send_message(t(
+                interaction, 'app_error.bot_missing_permissions',
+                permissions_list=", ".join(error.missing_permissions)), ephemeral=True)
         elif isinstance(error, app_commands.CommandOnCooldown):
-            await interaction.response.send_message(
-                t(interaction, 'app_error.cooldown').format(
-                    error.retry_after), ephemeral=True)
+            await interaction.response.send_message(t(
+                interaction, 'app_error.cooldown',
+                cooldown_time=abs(error.retry_after)), ephemeral=True)
         elif isinstance(error, app_commands.CommandNotFound):
             await self.sync(guild=interaction.guild)
             await interaction.response.send_message(

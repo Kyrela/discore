@@ -7,7 +7,6 @@ import os
 from os import path
 import logging
 import time
-from i18n import t
 
 from discord.ext import commands
 import discord
@@ -206,43 +205,47 @@ class Bot(commands.Bot):
             error = error.original
 
         if isinstance(error, (commands.ConversionError, commands.BadArgument)):
-            await reply_with_fallback(ctx, t("command_error.bad_argument").format(
-                get_command_usage(self.command_prefix, ctx.command),
-                self.command_prefix + "help " + ctx.command.name))
+            await reply_with_fallback(ctx, t(
+                ctx, "command_error.bad_argument",
+                command_usage=get_command_usage(self.command_prefix, ctx.command),
+                help_command=self.command_prefix + "help " + ctx.command.name))
             _log.warning(
                 f"{ctx.command.name!r} command failed for"
                 f" {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Bad arguments given")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await reply_with_fallback(ctx, t("command_error.missing_argument").format(
-                get_command_usage(self.command_prefix, ctx.command),
-                self.command_prefix + "help " + ctx.command.name))
+            await reply_with_fallback(ctx, t(
+                ctx, "command_error.missing_argument",
+                command_usage=get_command_usage(self.command_prefix, ctx.command),
+                help_command=self.command_prefix + "help " + ctx.command.name))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Missing required argument")
         elif (isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden)) or \
                 isinstance(error, commands.BotMissingPermissions):
-            await reply_with_fallback(ctx, t("command_error.bot_missing_permission"))
+            await reply_with_fallback(ctx, t(ctx, "command_error.bot_missing_permission"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Bot is missing permissions")
         elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.NotFound):
-            await reply_with_fallback(ctx, t("command_error.not_found"))
+            await reply_with_fallback(ctx, t(ctx, "command_error.not_found"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"No matches for the request")
         elif isinstance(error, (commands.NotOwner, commands.MissingPermissions)):
-            await reply_with_fallback(ctx, t("command_error.user_missing_permission"))
+            await reply_with_fallback(ctx, t(ctx, "command_error.user_missing_permission"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"User is missing permissions")
         elif isinstance(error, commands.CommandOnCooldown):
-            await reply_with_fallback(ctx, t("command_error.on_cooldown").format(error.retry_after))
+            await reply_with_fallback(ctx, t(
+                ctx, "command_error.on_cooldown",
+                cooldown_time=abs(error.retry_after)))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"On cooldown")
         elif isinstance(error, commands.InvalidEndOfQuotedStringError):
-            await reply_with_fallback(ctx, t("command_error.invalid_quoted_string"))
+            await reply_with_fallback(ctx, t(ctx, "command_error.invalid_quoted_string"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Invalid quoted string")

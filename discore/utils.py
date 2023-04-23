@@ -341,38 +341,50 @@ def i18n_init(**kwargs):
         i18n.load_path.append(locale_dir)
 
 
-def t(ctx_i, key, **kwargs):
+def t(ctx_i: Union[commands.Context, discord.Interaction, any], key: str, **kwargs) -> str:
     """
     Translate a key into a string
+    :param ctx_i: The context or interaction of the command
+    :param key: The key to translate
+    :param kwargs: The arguments to pass to the translation
+    :return: The translated string
     """
-    if isinstance(ctx_i, commands.Context):
-        if ctx_i.interaction:
-            locale = ctx_i.interaction.locale.value
-        else:
-            locale = i18n.config.get("locale")
-    else:
+
+    if isinstance(ctx_i, commands.Context) and ctx_i.interaction:
+        locale = ctx_i.interaction.locale.value
+    elif isinstance(ctx_i, discord.Interaction):
         locale = ctx_i.locale.value
+    else:
+        locale = i18n.config.get("locale")
     return i18n.t(key, locale=locale, **kwargs)
 
 
-async def reply_with_fallback(ctx_i: Union[commands.Context, discord.Interaction], message: str):
+async def reply_with_fallback(
+        destination: Union[
+            commands.Context, discord.Interaction, discord.TextChannel,
+            discord.VoiceChannel, discord.Thread, discord.DMChannel,
+            discord.PartialMessageable, discord.GroupChannel],
+        *args, **kwargs):
     """
     Try to reply to a message, if it fails, send it as a normal message
 
-    :param ctx_i: The context or interaction of the command
-    :param message: The message to send
+    :param destination: The context or interaction of the command
+    :param args: The arguments to pass to the reply
+    :param kwargs: The keyword arguments to pass to the reply
     :return: The return value of the function.
     """
 
-    if isinstance(ctx_i, commands.Context):
+    if isinstance(destination, commands.Context):
         try:
-            return await ctx_i.reply(message, mention_author=False)
+            return await destination.reply(*args, mention_author=False, **kwargs)
         except discord.errors.HTTPException:
-            return await ctx_i.send(message)
-
-    if ctx_i.response.is_done():
-        return await ctx_i.channel.send(message)
-    await ctx_i.response.send_message(message, ephemeral=True)
+            return await destination.send(*args, **kwargs)
+    if isinstance(destination, discord.Interaction):
+        if destination.response.is_done():
+            return await destination.channel.send(*args, **kwargs)
+        await destination.response.send_message(*args, ephemeral=True, **kwargs)
+    else:
+        return await destination.send(*args, **kwargs)
 
 
 def get_command_usage(prefix: str, command: commands.Command) -> str:
@@ -447,15 +459,14 @@ async def log_command_error(
 
     error_data = tb.extract_tb(err.__traceback__)[1]
     error_filename = path.basename(error_data.filename)
-    public_prompt = (
-        f"File {error_filename!r}, "
-        f"line {error_data.lineno}, "
-        f"command {error_data.name!r}\n"
-        f"{type(err).__name__} : {err}"
-    )
 
-    await reply_with_fallback(
-        ctx_i, t(ctx_i, "command_error.exception").format(public_prompt))
+    await reply_with_fallback(ctx_i, t(
+        ctx_i, "command_error.exception",
+        file=error_filename,
+        line=error_data.lineno,
+        command=error_data.name,
+        error=type(err).__name__,
+        error_message=err))
 
     user = ctx_i.author if isinstance(ctx_i, commands.Context) else ctx_i.user
 
@@ -525,9 +536,9 @@ async def log_data(
     logger.log(
         level,
         (
-            message + "\n"
-            + "\n".join(
-                f"\t{key}: {value!r}" for key, value in data.items())
+                message + "\n"
+                + "\n".join(
+            f"\t{key}: {value!r}" for key, value in data.items())
         ),
         exc_info=exc_info
     )

@@ -7,8 +7,7 @@ import itertools
 from discord.ext import commands
 import discord
 
-from .utils import config
-from i18n import t
+from .utils import config, reply_with_fallback, t
 
 __all__ = ('EmbedHelpCommand',)
 
@@ -49,22 +48,21 @@ class EmbedHelpCommand(commands.HelpCommand):
         :return: None
         """
 
-        bot = self.context.bot
+        ctx = self.context
+        bot = ctx.bot
 
         def get_category(command):
             cog = command.cog
-            return cog.qualified_name if cog is not None else t("help.bot.no_category")
+            return cog.qualified_name if cog is not None else t(ctx, "help.bot.no_category")
 
         filtered = await self.filter_commands(bot.commands, sort=True, key=get_category)
         to_iterate = itertools.groupby(filtered, key=get_category)
 
         e = discord.Embed(
-            title=t("help.bot.title"),
+            title=t(ctx, "help.bot.title"),
             description=(
-                    ((bot.description + "\n\n") if bot.description else "") +
-                    t("help.bot.description").format(
-                        self.context.clean_prefix + self.invoked_with, self.context.clean_prefix + self.invoked_with)
-            ),
+                ((bot.description + "\n\n") if bot.description else "") +
+                t(ctx, "help.bot.description", help_command=self.context.clean_prefix + self.invoked_with)),
             color=config.color
         )
 
@@ -87,18 +85,20 @@ class EmbedHelpCommand(commands.HelpCommand):
         :return: None
         """
 
+        ctx = self.context
+
         filtered = await self.filter_commands(cog.get_commands())
 
         e = discord.Embed(
-            title=t("help.cog.title").format(cog.qualified_name),
+            title=t(ctx, "help.cog.title", cog=cog.qualified_name),
             description=cog.description,
             color=config.color
         )
 
         e.add_field(
-            name=t("help.cog.commands"),
+            name=t(ctx, "help.cog.commands"),
             value=("`" + "`, `".join(elem.name for elem in filtered) + "`")
-            if filtered else t("help.no_commands"),
+            if filtered else t(ctx, "help.no_commands"),
             inline=False
         )
 
@@ -114,7 +114,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         """
 
         e = discord.Embed(
-            title=t("help.command.title").format(command.name),
+            title=t(self.context, "help.command.title", command=command.name),
             description=(
                     (command.description + "\n\n" if command.description else "") +
                     f"```{self.get_command_signature(command)}```" +
@@ -134,6 +134,8 @@ class EmbedHelpCommand(commands.HelpCommand):
         :return: None
         """
 
+        ctx = self.context
+
         filtered = await self.filter_commands(group.commands)
 
         e = discord.Embed(
@@ -143,9 +145,9 @@ class EmbedHelpCommand(commands.HelpCommand):
         )
 
         e.add_field(
-            name=t("help.group.title").format(group.qualified_name),
+            name=t(ctx, "help.group.title", group=group.qualified_name),
             value=("`" + "`, `".join(elem.name for elem in filtered) + "`")
-            if filtered else t("help.no_commands"),
+            if filtered else t(ctx, "help.no_commands"),
             inline=False
         )
 
@@ -153,28 +155,30 @@ class EmbedHelpCommand(commands.HelpCommand):
 
         await self.get_destination().reply(embed=e, mention_author=False)
 
-    async def command_not_found(self, string):
+    async def command_not_found(self, command_name):
         """
         Return a message error when no corresponding command is found
 
-        :param string: the called unknown command, cog or group
+        :param command_name: the called unknown command, cog or group
         :return: the message to send
         """
 
-        return t("help.command.not_found").format(string)
+        return t(self.context, "help.command.not_found", command=command_name)
 
-    async def subcommand_not_found(self, command, string):
+    async def subcommand_not_found(self, command, subcommand_name):
         """
         Return a message error when no corresponding subcommand is found
 
         :param command: the base command
-        :param string: the unknown subcommand
+        :param subcommand_name: the unknown subcommand
         :return: the message to send
         """
 
+        ctx = self.context
+
         if isinstance(command, commands.Group) and len(command.all_commands) > 0:
-            return t("help.subcommand.not_found").format(command.qualified_name, string)
-        return t("help.subcommand.no_subcommand").format(command.qualified_name)
+            return t(ctx, "help.subcommand.not_found", command=command.qualified_name, subcommand=subcommand_name)
+        return t(ctx, "help.subcommand.no_subcommand", command=command.qualified_name)
 
     async def send_error_message(self, error: commands.CommandError):
         """
@@ -185,11 +189,11 @@ class EmbedHelpCommand(commands.HelpCommand):
         """
 
         e = discord.Embed(
-            title=t("help.bot.title"),
+            title=t(self.context, "help.bot.title"),
             description=error,
             color=config.color
         )
 
         await self.str_embed_footer(e)
 
-        await self.get_destination().reply(embed=e, mention_author=False)
+        await reply_with_fallback(self.context, embed=e)
