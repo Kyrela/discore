@@ -23,7 +23,7 @@ command_error:
   exception: "Une erreur exceptionnelle est survenue. Le bug a été automatiquement signalé, veuillez patienter. Détail de l'erreur :```\nFichier '%{file}', ligne '%{line}', commande '%{command}'\n%{error}: %{error_message}\n```"
   invite_message: "Un bug est survenu. Cette invitation vous permettra, si besoin, d'accéder au serveur, afin de comprendre pourquoi le bug est survenu. Cette invitation est limitée à une utilisation, vous accorde uniquement le statut de membre temporaire, et dure maximum 1 jour."
   on_cooldown: "Cette commande est en cooldown. Réessayez dans %{cooldown_time} secondes."
-  invalid_quoted_string: "Désolé, mais je n'ai pas pu correctement traiter les arguments. Peut-être avez-vous oublié d'insérer un espace après une citation ?"
+  invalid_quoted_string: "Désolé, mais je n'ai pas pu correctement traiter les arguments. Peut-être avez-vous oublié de fermer un guillemet, ou d'insérer un espace après un guillemet ?"
   bot_missing_permission: "Je n'ai pas les permissions nécessaires pour effectuer cette action (rôle pas assez haut ou permission non accordée)"
   user_missing_permission: "Vous n'avez pas les permissions nécessaires pour effectuer cette action (rôle pas assez haut ou permission non accordée)"
 

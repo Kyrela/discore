@@ -1,6 +1,6 @@
 import string
 from typing import Union, Optional
-import envtoml
+import yamlenv
 import addict
 import i18n
 from mergedeep import merge
@@ -155,7 +155,8 @@ def _load_config_file(configuration_file: Optional[str]) -> addict.Dict:
 
     if configuration_file is None:
         return _load_config({})
-    return _load_config(envtoml.load(configuration_file))
+    with open(configuration_file, 'r', encoding='utf-8') as f:
+        return _load_config(yamlenv.load(f))
 
 
 def _load_config(config: dict) -> addict.Dict:
@@ -166,8 +167,8 @@ def _load_config(config: dict) -> addict.Dict:
     :return: the configuration as an addict.Dict
     """
 
-    default_config = envtoml.load(
-        path.join(path.dirname(__file__), "default_config.toml"))
+    with open(path.join(path.dirname(__file__), "default_config.yml"), 'r', encoding='utf-8') as f:
+        default_config = yamlenv.load(f)
     return addict.Dict(merge(default_config, config))
 
 
@@ -191,7 +192,7 @@ def config_init(**kwargs):
         elif 'DISCORE_CONFIG' in os.environ:
             config_file = os.environ['DISCORE_CONFIG']
         else:
-            config_file = "config.toml"
+            config_file = "config.yml"
         config.update(_load_config_file(config_file))
 
 
