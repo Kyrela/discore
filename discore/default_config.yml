@@ -3,14 +3,14 @@ color: 0x202225
 hot_reloading: true
 locale: "en-US"
 log:
-    level: "INFO"
-    root: true
-    format: "[{asctime}] {levelformat} {name}: {message}"
-    date_format: "%d/%m/%Y %H:%M:%S"
-    create_invite: false
-    level_format:
-        debug: "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
-        info: "[{blue}{bold}INFO{no_bold}{normal}]    "
-        warning: "[{yellow}{bold}WARNING{no_bold}{normal}] "
-        error: "[{red}ERROR{normal}]   "
-        critical: "[{bg_red}CRITICAL{bg_normal}]"
+  level: "INFO"
+  root: true
+  format: "[{asctime}] {levelformat} {name}: {message}"
+  date_format: "%d/%m/%Y %H:%M:%S"
+  create_invite: false
+  level_format:
+    debug: "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
+    info: "[{blue}{bold}INFO{no_bold}{normal}]    "
+    warning: "[{yellow}{bold}WARNING{no_bold}{normal}] "
+    error: "[{red}ERROR{normal}]   "
+    critical: "[{bg_red}CRITICAL{bg_normal}]"
