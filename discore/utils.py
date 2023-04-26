@@ -178,7 +178,6 @@ def config_init(**kwargs):
     """
 
     global config
-    config.clear()
 
     env_file = kwargs.pop('env_file', '.env')
     if env_file:
