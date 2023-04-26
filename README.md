@@ -57,7 +57,7 @@ token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 description: "A basic test bot"
 version: "1.0"
 color: 0x35901E
-hot_reloading: true
+hot_reload: true
 locale: "en-US"
 
 help:
@@ -169,7 +169,7 @@ app_error:
 - `version`: the version of the bot, if any
 - `color`: the color that should be used in embeds, if any
 - `help_cog`: the name of the cog containing the help command. If not provided, no cog will be assigned.
-- `hot_reloading`: whether or not the bot should reload the cogs when they are modified. Also describe if 
+- `hot_reload`: whether or not the bot should reload the cogs when they are modified. Also describe if 
   localisations should be loaded from memory or from the disk.
 - `locale`: The default locale of the bot, if none is found at the command's call
 - `help` : the help command's configuration - below configuration is a non-exhaustive list of the available options 

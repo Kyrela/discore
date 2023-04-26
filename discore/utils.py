@@ -3,7 +3,6 @@ from typing import Union, Optional
 import yamlenv
 import addict
 import i18n
-from mergedeep import merge
 from os import path
 import os
 from datetime import datetime
@@ -177,10 +176,10 @@ def config_init(**kwargs):
 
     for config_file in config_files:
         with open(config_file, 'r', encoding='utf-8') as f:
-            config.update(yamlenv.load(f))
+            config.update(addict.Dict(yamlenv.load(f)))
 
     if 'configuration' in kwargs:
-        config.update(kwargs.pop('configuration'))
+        config.update(addict.Dict(kwargs.pop('configuration')))
 
 
 _ainsi = {

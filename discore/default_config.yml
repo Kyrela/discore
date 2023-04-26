@@ -1,6 +1,5 @@
 prefix: "!"
-color: 0x202225
-hot_reloading: true
+hot_reload: true
 locale: "en-US"
 log:
   level: "INFO"
