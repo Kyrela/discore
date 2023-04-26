@@ -145,33 +145,6 @@ def sformat(s, *args, **kwargs):
 config: addict.Dict = addict.Dict()
 
 
-def _load_config_file(configuration_file: Optional[str]) -> addict.Dict:
-    """
-    The configuration file loader
-
-    :param configuration_file: the path to the configuration file
-    :return: the configuration as an addict.Dict
-    """
-
-    if configuration_file is None:
-        return _load_config({})
-    with open(configuration_file, 'r', encoding='utf-8') as f:
-        return _load_config(yamlenv.load(f))
-
-
-def _load_config(config: dict) -> addict.Dict:
-    """
-    The configuration loader
-
-    :param config: the local configuration to load
-    :return: the configuration as an addict.Dict
-    """
-
-    with open(path.join(path.dirname(__file__), "default_config.yml"), 'r', encoding='utf-8') as f:
-        default_config = yamlenv.load(f)
-    return addict.Dict(merge(default_config, config))
-
-
 def config_init(**kwargs):
     """
     Initialize the configuration
@@ -183,16 +156,31 @@ def config_init(**kwargs):
     if env_file:
         load_dotenv(dotenv_path=env_file)
 
-    if 'configuration' in kwargs:
-        config.update(_load_config(kwargs.pop('configuration')))
-    else:
-        if 'configuration_file' in kwargs:
-            config_file = kwargs.pop('configuration_file')
-        elif 'DISCORE_CONFIG' in os.environ:
-            config_file = os.environ['DISCORE_CONFIG']
+    config_files = [path.join(path.dirname(__file__), "default_config.yml")]
+
+    if "config.yml" in os.listdir() and os.path.isfile("config.yml"):
+        config_files.append("config.yml")
+
+    if 'configuration_file' in kwargs:
+        kwargs_config = kwargs.pop('configuration_file')
+        if isinstance(kwargs_config, list):
+            config_files.extend(kwargs_config)
         else:
-            config_file = "config.yml"
-        config.update(_load_config_file(config_file))
+            config_files.append(kwargs_config)
+
+    if 'DISCORE_CONFIG' in os.environ:
+        env_config = os.environ['DISCORE_CONFIG']
+        if ':' in env_config:
+            config_files.extend(env_config.split(':'))
+        else:
+            config_files.append(env_config)
+
+    for config_file in config_files:
+        with open(config_file, 'r', encoding='utf-8') as f:
+            config.update(yamlenv.load(f))
+
+    if 'configuration' in kwargs:
+        config.update(kwargs.pop('configuration'))
 
 
 _ainsi = {
