@@ -39,6 +39,7 @@ class Bot(commands.Bot):
         """
 
         self.start_time = None
+        self.initialisation_time = time.time()
 
         config_init(**kwargs)
         logging_init(**kwargs)
@@ -116,9 +117,15 @@ class Bot(commands.Bot):
     async def on_ready(self):
         self.start_time = time.time()
         if self.application_id:
-            if not await self.tree.sync():
+            sync_res = await self.tree.sync()
+            if sync_res is None:
                 _log.error("Failed to sync the tree")
-        _log.info(f"Bot loaded, ready to use (prefix {self.command_prefix!r})")
+            elif sync_res:
+                _log.info(f"Slash commands successfully synced: {', '.join([c.name for c in sync_res])}")
+            else:
+                _log.info("No slash commands to sync")
+        _log.info(f"Bot launched in {self.start_time - self.initialisation_time:.3f}s,"
+                  f" ready to use (prefix {self.command_prefix!r})")
 
     async def on_guild_join(self, guild: discord.Guild):
         if self.application_id:
