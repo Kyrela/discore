@@ -361,15 +361,17 @@ async def reply_with_fallback(
     :return: The return value of the function.
     """
 
+    kwargs.setdefault("mention_author", False)
+
     if isinstance(destination, commands.Context):
         try:
-            return await destination.reply(*args, mention_author=False, **kwargs)
+            return await destination.reply(*args, **kwargs)
         except discord.errors.HTTPException:
             return await destination.send(*args, **kwargs)
     if isinstance(destination, discord.Interaction):
         if destination.response.is_done():
             return await destination.channel.send(*args, **kwargs)
-        await destination.response.send_message(*args, ephemeral=True, **kwargs)
+        await destination.response.send_message(*args, **kwargs)
     else:
         return await destination.send(*args, **kwargs)
 
