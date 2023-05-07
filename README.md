@@ -8,7 +8,7 @@ A core for initialise, run and tracks errors of discord.py bots, with a "Convent
 ## Features
 
 - One-line bot initialisation and one-line run
-- better default commands
+- better default help hybrid command
 - All information stored in a configuration file
 - Automatic error handling and responses
 - Automatic logs storage for each command called, completed and failed
