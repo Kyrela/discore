@@ -561,7 +561,7 @@ class EmbedHelpCommand(HelpHybridCommand):
             description=(
                 ((bot.description + "\n\n") if bot.description else "") +
                 t(ctx, "help.bot.description", help_command=self.context.clean_prefix + self.invoked_with)),
-            color=config.color
+            color=config.color or None
         )
 
         for category, commands in to_iterate:
@@ -590,7 +590,7 @@ class EmbedHelpCommand(HelpHybridCommand):
         e = discord.Embed(
             title=t(ctx, "help.cog.title", cog=cog.qualified_name),
             description=cog.description,
-            color=config.color
+            color=config.color or None
         )
 
         e.add_field(
@@ -620,7 +620,7 @@ class EmbedHelpCommand(HelpHybridCommand):
                     f"```{self.get_command_signature(command)}```" +
                     ("\n" + command.help if command.help else "")
             ),
-            color=config.color
+            color=config.color or None
         )
 
         await self.str_embed_footer(e)
@@ -641,7 +641,7 @@ class EmbedHelpCommand(HelpHybridCommand):
         e = discord.Embed(
             title=group.qualified_name,
             description=group.description,
-            color=config.color
+            color=config.color or None
         )
 
         e.add_field(
@@ -690,7 +690,7 @@ class EmbedHelpCommand(HelpHybridCommand):
         e = discord.Embed(
             title=t(self.context, "help.bot.title"),
             description=error,
-            color=config.color
+            color=config.color or None
         )
 
         await self.str_embed_footer(e)
