@@ -62,7 +62,7 @@ class Bot(commands.Bot):
         loads dynamically the cogs found in the /cog folder and the log cog
         """
 
-        help_cog_name = config.help.cog or None
+        help_cog_name = config.help.cog.title() if config.help.cog else None
 
         if path.isdir("cogs"):
             for file in os.listdir("cogs"):
@@ -70,12 +70,12 @@ class Bot(commands.Bot):
                 if not file.endswith(".py"):
                     continue
 
-                cog_name = file[:-3]
-                exec(f"from cogs.{cog_name} import {cog_name.title()}")
-                new_cog = eval(f"{cog_name.title()}(self)")
+                cog_name = file[:-3].title()
+                cog_class = getattr(__import__('cogs.' + cog_name.lower(), fromlist=[cog_name]), cog_name)
+                new_cog = cog_class(self)
                 await self.add_cog(new_cog)
 
-                if help_cog_name and help_cog_name.title() == cog_name.title():
+                if help_cog_name == cog_name:
                     self.help_command.cog = new_cog
                 _log.info(f"Cog {cog_name!r} loaded")
 
