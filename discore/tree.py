@@ -3,11 +3,14 @@ The class that represent the bot's command tree
 """
 
 import logging
+from i18n import t
 
 from discord import *
 from discord import app_commands
+from discord._types import ClientT
+from discord.app_commands import Namespace, AppCommandError
 
-from .utils import t, get_app_command_usage, log_command_error
+from .utils import get_app_command_usage, log_command_error, set_locale
 
 __all__ = ('CommandTree',)
 
@@ -62,37 +65,37 @@ class CommandTree(app_commands.CommandTree):
 
         if isinstance(error, app_commands.TransformerError):
             await interaction.response.send_message(t(
-                interaction, 'app_error.transformer',
+                'app_error.transformer',
                 argument_value=error.value,
                 command_usage=(get_app_command_usage(command) if command is not None else ''),
                 help_command="/help " + (command.qualified_name if command else '')), ephemeral=True)
         elif isinstance(error, app_commands.NoPrivateMessage):
             await interaction.response.send_message(
-                t(interaction, 'app_error.no_private_message'), ephemeral=True)
+                t('app_error.no_private_message'), ephemeral=True)
         elif isinstance(error, app_commands.MissingRole):
             await interaction.response.send_message(t(
-                interaction, 'app_error.missing_role',
+                'app_error.missing_role',
                 role=error.missing_role), ephemeral=True)
         elif isinstance(error, app_commands.MissingAnyRole):
             await interaction.response.send_message(t(
-                interaction, 'app_error.missing_any_role',
+                'app_error.missing_any_role',
                 roles_list=", ".join(error.missing_roles)), ephemeral=True)
         elif isinstance(error, app_commands.MissingPermissions):
             await interaction.response.send_message(t(
-                interaction, 'app_error.missing_permissions',
+                'app_error.missing_permissions',
                 permissions_list=", ".join(error.missing_permissions)), ephemeral=True)
         elif isinstance(error, app_commands.BotMissingPermissions):
             await interaction.response.send_message(t(
-                interaction, 'app_error.bot_missing_permissions',
+                'app_error.bot_missing_permissions',
                 permissions_list=", ".join(error.missing_permissions)), ephemeral=True)
         elif isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(t(
-                interaction, 'app_error.cooldown',
+                'app_error.cooldown',
                 cooldown_time=abs(error.retry_after)), ephemeral=True)
         elif isinstance(error, app_commands.CommandNotFound):
             await self.sync(guild=interaction.guild)
             await interaction.response.send_message(
-                t(interaction, 'app_error.command_not_found'), ephemeral=True)
+                t('app_error.command_not_found'), ephemeral=True)
         elif isinstance(error, app_commands.CommandInvokeError):
             await log_command_error(self.client, interaction, error.original, logger=_log)
         else:
@@ -101,3 +104,54 @@ class CommandTree(app_commands.CommandTree):
                 + "\n".join(f'\t{attr!r}: {interaction.__getattribute__(attr)!r}' for attr in interaction.__slots__
                             if attr[0] != '_'),
                 exc_info=error)
+
+    async def _call(self, interaction: Interaction[ClientT]) -> None:
+        if not await self.interaction_check(interaction):
+            interaction.command_failed = True
+            return
+
+        data: ApplicationCommandInteractionData = interaction.data  # type: ignore
+        type = data.get('type', 1)
+        if type != 1:
+            # Context menu command...
+            await self._call_context_menu(interaction, data, type)
+            return
+
+        command, options = self._get_app_command_options(data)
+
+        # Pre-fill the cached slot to prevent re-computation
+        interaction._cs_command = command
+
+        # At this point options refers to the arguments of the command
+        # and command refers to the class type we care about
+        namespace = Namespace(interaction, data.get('resolved', {}), options)
+
+        # Same pre-fill as above
+        interaction._cs_namespace = namespace
+
+        set_locale(interaction)
+        self.client.dispatch('app_command', interaction, command)
+
+        # Auto complete handles the namespace differently... so at this point this is where we decide where that is.
+        if interaction.type is InteractionType.autocomplete:
+            focused = next((opt['name'] for opt in options if opt.get('focused')), None)
+            if focused is None:
+                raise AppCommandError('This should not happen, but there is no focused element. This is a Discord bug.')
+
+            try:
+                await command._invoke_autocomplete(interaction, focused, namespace)
+            except Exception:
+                # Suppress exception since it can't be handled anyway.
+                pass
+
+            return
+
+        try:
+            await command._invoke_with_namespace(interaction, namespace)
+        except AppCommandError as e:
+            interaction.command_failed = True
+            await command._invoke_error_handlers(interaction, e)
+            await self.on_error(interaction, e)
+        else:
+            if not interaction.command_failed:
+                self.client.dispatch('app_command_completion', interaction, command)

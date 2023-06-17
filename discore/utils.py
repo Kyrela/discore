@@ -1,5 +1,5 @@
 import string
-from typing import Union, Optional
+from typing import Union
 import yamlenv
 import addict
 import i18n
@@ -15,21 +15,22 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+from discord.utils import *
+
 __all__ = (
     'sformat',
     'config',
     'config_init',
     'logging_init',
     'i18n_init',
-    't',
-    'reply_with_fallback',
+    'set_locale',
+    'fallback_reply',
     'get_command_usage',
     'get_app_command_usage',
     'sanitize',
     'log_command_error',
     'log_data',
-)
-
+) + discord.utils.__all__
 
 class SparseFormatter(string.Formatter):
     """
@@ -328,25 +329,26 @@ def i18n_init(**kwargs):
         i18n.load_path.append(locale_dir)
 
 
-def t(ctx_i: Union[commands.Context, discord.Interaction, any], key: str, **kwargs) -> str:
+def set_locale(value: Union[commands.Context, discord.Interaction, discord.Locale, str, any]) -> None:
     """
-    Translate a key into a string
-    :param ctx_i: The context or interaction of the command
-    :param key: The key to translate
-    :param kwargs: The arguments to pass to the translation
-    :return: The translated string
+    Set the locale corresponding to the given value
+    :param value: The discord or builtin object to get the locale from
+    :return: None
     """
 
-    if isinstance(ctx_i, commands.Context) and ctx_i.interaction:
-        locale = ctx_i.interaction.locale.value
-    elif isinstance(ctx_i, discord.Interaction):
-        locale = ctx_i.locale.value
+    if isinstance(value, commands.Context) and value.interaction:
+        i18n.set('locale', value.interaction.locale.value)
+    elif isinstance(value, discord.Interaction):
+        i18n.set('locale', value.locale.value)
+    elif isinstance(value, discord.Locale):
+        i18n.set('locale', value.value)
+    elif isinstance(value, str):
+        i18n.set('locale', value)
     else:
-        locale = i18n.config.get("locale")
-    return i18n.t(key, locale=locale, **kwargs)
+        i18n.set('locale', i18n.config.get('fallback'))
 
 
-async def reply_with_fallback(
+async def fallback_reply(
         destination: Union[
             commands.Context, discord.Interaction, discord.TextChannel,
             discord.VoiceChannel, discord.Thread, discord.DMChannel,
@@ -423,7 +425,7 @@ def sanitize(text: str, limit=4000, crop_at_end: bool = True) -> str:
     :param crop_at_end: Whether to crop the text at the end or at the start
     """
 
-    sanitized_text = text.replace("```", "'''")
+    sanitized_text = text.replace("```", "'''").replace("\n", "\\n")
     text_len = len(sanitized_text)
     if text_len > limit:
         if crop_at_end:
@@ -449,8 +451,8 @@ async def log_command_error(
     error_data = tb.extract_tb(err.__traceback__)[1]
     error_filename = path.basename(error_data.filename)
 
-    await reply_with_fallback(ctx_i, t(
-        ctx_i, "command_error.exception",
+    await fallback_reply(ctx_i, i18n.t(
+        "command_error.exception",
         file=error_filename,
         line=error_data.lineno,
         command=error_data.name,
@@ -471,7 +473,7 @@ async def log_command_error(
     if (config.log.create_invite
             and ctx_i.channel.permissions_for(ctx_i.guild.me).create_instant_invite):
         data["Invite"] = await ctx_i.channel.create_invite(
-            reason=t(ctx_i, "command_error.invite_message"),
+            reason=i18n.t("command_error.invite_message"),
             max_age=604800,
             max_uses=1,
             temporary=True,

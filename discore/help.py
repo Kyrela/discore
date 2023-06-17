@@ -12,8 +12,9 @@ import itertools
 import copy
 import functools
 from typing import Any, Dict, Generator, Callable, List, Optional, Union, Iterable
+from i18n import t
 
-from .utils import config, reply_with_fallback, t
+from .utils import config, fallback_reply
 
 
 __all__ = ('EmbedHelpCommand', 'HelpHybridCommand')
@@ -551,16 +552,16 @@ class EmbedHelpCommand(HelpHybridCommand):
 
         def get_category(command):
             cog = command.cog
-            return cog.qualified_name if cog is not None else t(ctx, "help.bot.no_category")
+            return cog.qualified_name if cog is not None else t("help.bot.no_category")
 
         filtered = await self.filter_commands(bot.commands, sort=True, key=get_category)
         to_iterate = itertools.groupby(filtered, key=get_category)
 
         e = discord.Embed(
-            title=t(ctx, "help.bot.title"),
+            title=t("help.bot.title"),
             description=(
                 ((bot.description + "\n\n") if bot.description else "") +
-                t(ctx, "help.bot.description", help_command=self.context.clean_prefix + self.invoked_with)),
+                t("help.bot.description", help_command=self.context.clean_prefix + self.invoked_with)),
             color=config.color or None
         )
 
@@ -573,7 +574,7 @@ class EmbedHelpCommand(HelpHybridCommand):
             )
 
         await self.str_embed_footer(e)
-        await reply_with_fallback(ctx, embed=e)
+        await fallback_reply(ctx, embed=e)
 
     async def send_cog_help(self, cog):
         """
@@ -588,20 +589,20 @@ class EmbedHelpCommand(HelpHybridCommand):
         filtered = await self.filter_commands(cog.get_commands())
 
         e = discord.Embed(
-            title=t(ctx, "help.cog.title", cog=cog.qualified_name),
+            title=t("help.cog.title", cog=cog.qualified_name),
             description=cog.description,
             color=config.color or None
         )
 
         e.add_field(
-            name=t(ctx, "help.cog.commands"),
+            name=t("help.cog.commands"),
             value=("`" + "`, `".join(elem.name for elem in filtered) + "`")
-            if filtered else t(ctx, "help.no_commands"),
+            if filtered else t("help.no_commands"),
             inline=False
         )
 
         await self.str_embed_footer(e)
-        await reply_with_fallback(ctx, embed=e)
+        await fallback_reply(ctx, embed=e)
 
     async def send_command_help(self, command: commands.Command):
         """
@@ -614,7 +615,7 @@ class EmbedHelpCommand(HelpHybridCommand):
         ctx = self.context
 
         e = discord.Embed(
-            title=t(ctx, "help.command.title", command=command.name),
+            title=t("help.command.title", command=command.name),
             description=(
                     (command.description + "\n\n" if command.description else "") +
                     f"```{self.get_command_signature(command)}```" +
@@ -624,7 +625,7 @@ class EmbedHelpCommand(HelpHybridCommand):
         )
 
         await self.str_embed_footer(e)
-        await reply_with_fallback(ctx, embed=e)
+        await fallback_reply(ctx, embed=e)
 
     async def send_group_help(self, group: commands.Group):
         """
@@ -645,14 +646,14 @@ class EmbedHelpCommand(HelpHybridCommand):
         )
 
         e.add_field(
-            name=t(ctx, "help.group.title", group=group.qualified_name),
+            name=t("help.group.title", group=group.qualified_name),
             value=("`" + "`, `".join(elem.name for elem in filtered) + "`")
-            if filtered else t(ctx, "help.no_commands"),
+            if filtered else t("help.no_commands"),
             inline=False
         )
 
         await self.str_embed_footer(e)
-        await reply_with_fallback(ctx, embed=e)
+        await fallback_reply(ctx, embed=e)
 
     async def command_not_found(self, command_name):
         """
@@ -662,7 +663,7 @@ class EmbedHelpCommand(HelpHybridCommand):
         :return: the message to send
         """
 
-        return t(self.context, "help.command.not_found", command=command_name)
+        return t("help.command.not_found", command=command_name)
 
     async def subcommand_not_found(self, command, subcommand_name):
         """
@@ -676,8 +677,8 @@ class EmbedHelpCommand(HelpHybridCommand):
         ctx = self.context
 
         if isinstance(command, commands.Group) and len(command.all_commands) > 0:
-            return t(ctx, "help.subcommand.not_found", command=command.qualified_name, subcommand=subcommand_name)
-        return t(ctx, "help.subcommand.no_subcommand", command=command.qualified_name)
+            return t("help.subcommand.not_found", command=command.qualified_name, subcommand=subcommand_name)
+        return t("help.subcommand.no_subcommand", command=command.qualified_name)
 
     async def send_error_message(self, error: commands.CommandError):
         """
@@ -688,10 +689,10 @@ class EmbedHelpCommand(HelpHybridCommand):
         """
 
         e = discord.Embed(
-            title=t(self.context, "help.bot.title"),
+            title=t("help.bot.title"),
             description=error,
             color=config.color or None
         )
 
         await self.str_embed_footer(e)
-        await reply_with_fallback(self.context, embed=e)
+        await fallback_reply(self.context, embed=e)

@@ -7,29 +7,33 @@ import os
 from os import path
 import logging
 import time
+from importlib.metadata import version
+from i18n import t
 
 from discord.ext import commands
 import discord
 
 from .help import EmbedHelpCommand
-from .command_tree import CommandTree
-from .utils import *
+from .tree import CommandTree
+from .utils import (config, config_init, logging_init, i18n_init, set_locale, sanitize,
+                    fallback_reply, get_command_usage, log_command_error, log_data)
 
 __all__ = ('Bot',)
 
 _log = logging.getLogger(__name__)
 
 
+class NoSpecifiedTokenError(Exception):
+    """
+    a basic custom error, in case no token is specified
+    """
+    pass
+
+
 class Bot(commands.Bot):
     """
     The class representing the Discord bot
     """
-
-    class NoSpecifiedTokenError(Exception):
-        """
-        a basic custom error, in case no token is specified
-        """
-        pass
 
     def __init__(self, command_prefix: str = None, **kwargs):
         """
@@ -44,7 +48,7 @@ class Bot(commands.Bot):
         config_init(**kwargs)
         logging_init(**kwargs)
         i18n_init(**kwargs)
-        _log.info("Bot initialising...")
+        _log.info(f"Bot initialising... discore v{version('discore')}, discord.py v{version('discord.py')}")
 
         super().__init__(
             command_prefix=command_prefix or config.prefix,
@@ -93,7 +97,7 @@ class Bot(commands.Bot):
         token = token or config.token or None
 
         if not token:
-            raise self.NoSpecifiedTokenError(
+            raise NoSpecifiedTokenError(
                 "No token is specified in the configuration file nor in the run method")
 
         super().run(
@@ -137,13 +141,27 @@ class Bot(commands.Bot):
     async def on_resumed(self):
         _log.info("Bot resumed")
 
+    async def invoke(self, ctx: commands.Context, /) -> None:
+        if ctx.command is not None:
+            self.dispatch('command', ctx)
+            set_locale(ctx)
+            try:
+                if await self.can_run(ctx, call_once=True):
+                    await ctx.command.invoke(ctx)
+                else:
+                    raise commands.errors.CheckFailure('The global check once functions failed.')
+            except commands.errors.CommandError as exc:
+                await ctx.command.dispatch_error(ctx, exc)
+            else:
+                self.dispatch('command_completion', ctx)
+        elif ctx.invoked_with:
+            exc = commands.errors.CommandNotFound(f'Command "{ctx.invoked_with}" is not found')
+            self.dispatch('command_error', ctx, exc)
+
     async def on_command(self, ctx: commands.Context):
         if ctx.interaction:
-            _log.info(
-                f"{ctx.command.name!r} app command request sent by "
-                f"{str(ctx.author)!r} ({ctx.author.id!r}) with invocation "
-                f"{str(ctx.kwargs)!r}")
             return
+
         _log.info(
             f"{ctx.command.name!r} command request sent by {str(ctx.author)!r} "
             f"({ctx.author.id!r}) with invocation {ctx.message.content!r}")
@@ -155,18 +173,16 @@ class Bot(commands.Bot):
 
         rep = None
         message_log_infos = [
-            f"{ctx.command.name!r} {'app ' if ctx.interaction else ''}"
-            f"command succeeded for {str(ctx.author)!r} ({ctx.author.id!r})"]
+            f"{ctx.command.name!r} command succeeded for {str(ctx.author)!r}"
+            f" ({ctx.author.id!r})"]
 
-        if ctx.interaction:
-            rep = await ctx.interaction.original_response()
-        else:
-            async for message in ctx.history(limit=5):
-                if (message.author == ctx.me
-                        and message.reference
-                        and message.reference.message_id == ctx.message.id):
-                    rep = message
-                    break
+        async for message in ctx.history(limit=5):
+            if (message.author == ctx.me
+                    and message.reference
+                    and message.reference.message_id == ctx.message.id):
+                rep = message
+                break
+
         if rep:
             message_log_infos.append("with a response")
             if rep.content:
@@ -212,8 +228,8 @@ class Bot(commands.Bot):
             error = error.original
 
         if isinstance(error, (commands.ConversionError, commands.BadArgument)):
-            await reply_with_fallback(ctx, t(
-                ctx, "command_error.bad_argument",
+            await fallback_reply(ctx, t(
+                "command_error.bad_argument",
                 command_usage=get_command_usage(self.command_prefix, ctx.command),
                 help_command=self.command_prefix + "help " + ctx.command.name))
             _log.warning(
@@ -221,8 +237,8 @@ class Bot(commands.Bot):
                 f" {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Bad arguments given")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await reply_with_fallback(ctx, t(
-                ctx, "command_error.missing_argument",
+            await fallback_reply(ctx, t(
+                "command_error.missing_argument",
                 command_usage=get_command_usage(self.command_prefix, ctx.command),
                 help_command=self.command_prefix + "help " + ctx.command.name))
             _log.warning(
@@ -230,29 +246,27 @@ class Bot(commands.Bot):
                 f"Missing required argument")
         elif (isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden)) or \
                 isinstance(error, commands.BotMissingPermissions):
-            await reply_with_fallback(ctx, t(ctx, "command_error.bot_missing_permission"))
+            await fallback_reply(ctx, t("command_error.bot_missing_permission"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Bot is missing permissions")
         elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.NotFound):
-            await reply_with_fallback(ctx, t(ctx, "command_error.not_found"))
+            await fallback_reply(ctx, t("command_error.not_found"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"No matches for the request")
         elif isinstance(error, (commands.NotOwner, commands.MissingPermissions)):
-            await reply_with_fallback(ctx, t(ctx, "command_error.user_missing_permission"))
+            await fallback_reply(ctx, t("command_error.user_missing_permission"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"User is missing permissions")
         elif isinstance(error, commands.CommandOnCooldown):
-            await reply_with_fallback(ctx, t(
-                ctx, "command_error.on_cooldown",
-                cooldown_time=abs(error.retry_after)))
+            await fallback_reply(ctx, t("command_error.on_cooldown", cooldown_time=abs(error.retry_after)))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"On cooldown")
         elif isinstance(error, commands.InvalidEndOfQuotedStringError):
-            await reply_with_fallback(ctx, t(ctx, "command_error.invalid_quoted_string"))
+            await fallback_reply(ctx, t("command_error.invalid_quoted_string"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Invalid quoted string")
@@ -310,3 +324,10 @@ class Bot(commands.Bot):
                 f"{attachment.filename!r} (url {attachment.url!r})"]
 
         _log.info(", ".join(message_log_infos))
+
+    async def on_app_command(
+            self, i: discord.Interaction, command: discord.app_commands.Command) -> None:
+        args = await i.command._transform_arguments(i, i._cs_namespace)
+        _log.info(
+            f"{i.command.name!r} app command request sent by {str(i.user)!r} "
+            f"({i.user.id!r}) with invocation \"{args!r}\"")
