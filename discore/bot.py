@@ -6,7 +6,7 @@ import asyncio
 import os
 from os import path
 import logging
-import time
+import datetime
 from importlib.metadata import version
 from i18n import t
 
@@ -43,7 +43,7 @@ class Bot(commands.Bot):
         """
 
         self.start_time = None
-        self.initialisation_time = time.time()
+        self.initialisation_time = datetime.datetime.now()
 
         config_init(**kwargs)
         logging_init(**kwargs)
@@ -119,7 +119,7 @@ class Bot(commands.Bot):
             + (f" ver. {config.version}" if config.version else ""))
 
     async def on_ready(self):
-        self.start_time = time.time()
+        self.start_time = datetime.datetime.now()
         if self.application_id:
             sync_res = await self.tree.sync()
             if sync_res is None:
@@ -128,7 +128,7 @@ class Bot(commands.Bot):
                 _log.info(f"Slash commands successfully synced: {', '.join([c.name for c in sync_res])}")
             else:
                 _log.info("No slash commands to sync")
-        _log.info(f"Bot launched in {self.start_time - self.initialisation_time:.3f}s,"
+        _log.info(f"Bot launched in {(self.start_time - self.initialisation_time).total_seconds():.3f}s,"
                   f" ready to use (prefix {self.command_prefix!r})")
 
     async def on_guild_join(self, guild: discord.Guild):
