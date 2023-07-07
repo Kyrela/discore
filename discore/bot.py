@@ -263,7 +263,7 @@ class Bot(commands.Bot):
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"User is missing permissions")
         elif isinstance(error, commands.CommandOnCooldown):
-            await fallback_reply(ctx, t("command_error.on_cooldown", cooldown_time=abs(error.retry_after)))
+            await fallback_reply(ctx, t("command_error.on_cooldown", cooldown_time=int(error.retry_after)))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"On cooldown")
