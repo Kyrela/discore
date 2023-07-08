@@ -272,6 +272,16 @@ class Bot(commands.Bot):
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"Invalid quoted string")
+        elif isinstance(error, commands.PrivateMessageOnly):
+            await fallback_reply(ctx, t("command_error.private_message_only"))
+            _log.warning(
+                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
+                f"Private message only")
+        elif isinstance(error, commands.NoPrivateMessage):
+            await fallback_reply(ctx, t("command_error.no_private_message"))
+            _log.warning(
+                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
+                f"No private message")
         elif isinstance(error, commands.CommandNotFound):
             return
         elif (isinstance(error, commands.CommandInvokeError)

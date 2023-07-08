@@ -26,6 +26,8 @@ command_error:
   invalid_quoted_string: "Sorry, but I couldn't correctly process the arguments. Maybe you forgot to close a quote or to put a space after a closing quote?"
   bot_missing_permission: "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
   user_missing_permission: "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
+  private_message_only: "This command can only be used in private messages."
+  no_private_message: "This command cannot be used in private messages."
 
 app_error:
   transformer: "The argument `%{argument_value}` is incorrect.\nTry \n```\n%{command_usage}\n```\nFor more information on usage, send\n```\n%{help_command}\n```"

@@ -26,6 +26,8 @@ command_error:
   invalid_quoted_string: "Désolé, mais je n'ai pas pu correctement traiter les arguments. Peut-être avez-vous oublié de fermer un guillemet, ou d'insérer un espace après un guillemet ?"
   bot_missing_permission: "Je n'ai pas les permissions nécessaires pour effectuer cette action (rôle pas assez haut ou permission non accordée)"
   user_missing_permission: "Vous n'avez pas les permissions nécessaires pour effectuer cette action (rôle pas assez haut ou permission non accordée)"
+  private_message_only: "Cette commande ne peut être utilisée qu'en messages privés."
+  no_private_message: "Cette commande ne peut pas être utilisée en messages privés."
 
 app_error:
   transformer: "L'argument `%{argument_value}` est incorrect.\nEssayez \n```\n%{command_usage}\n```\nPour plus d'informations sur l'utilisation, envoyez\n```\n%{help_command}\n```"
