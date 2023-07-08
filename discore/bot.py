@@ -4,6 +4,7 @@ The class representing the Discord bot
 
 import asyncio
 import os
+import time
 from os import path
 import logging
 import datetime
@@ -263,7 +264,10 @@ class Bot(commands.Bot):
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"User is missing permissions")
         elif isinstance(error, commands.CommandOnCooldown):
-            await fallback_reply(ctx, t("command_error.on_cooldown", cooldown_time=int(error.retry_after)))
+            await fallback_reply(
+                ctx, t(
+                    "command_error.on_cooldown",
+                    cooldown_time="<t:" + str(int(time.time() + error.retry_after)) + ":R>"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"On cooldown")
