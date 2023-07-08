@@ -416,16 +416,19 @@ def get_app_command_usage(command: Union[app_commands.Command, app_commands.Cont
         in (command.parameters if isinstance(command, app_commands.Command) else [])))
 
 
-def sanitize(text: str, limit=4000, crop_at_end: bool = True) -> str:
+def sanitize(text: str, limit=4000, crop_at_end: bool = True, replace_newline: bool = True) -> str:
     """
     Sanitize a string to be displayed in Discord, and shorten it if needed
 
     :param text: The text to sanitize
     :param limit: The maximum length of the text
     :param crop_at_end: Whether to crop the text at the end or at the start
+    :param replace_newline: Whether to replace newlines with "\\n"
     """
 
-    sanitized_text = text.replace("```", "'''").replace("\n", "\\n")
+    sanitized_text = text.replace("```", "'''")
+    if replace_newline:
+        sanitized_text = sanitized_text.replace("\n", "\\n")
     text_len = len(sanitized_text)
     if text_len > limit:
         if crop_at_end:
@@ -517,7 +520,7 @@ async def log_data(
                 "".join(tb.format_tb(err_traceback))
                 + "".join(tb.format_exception_only(err_type, err_value)))
 
-        traceback = f"```\n{sanitize(unenclosed_tb, 1992)}\n```"
+        traceback = f"```\n{sanitize(unenclosed_tb, 1992, replace_newline=False)}\n```"
 
         data["File"] = tb_infos.filename
         data["Line"] = tb_infos.lineno
@@ -527,9 +530,9 @@ async def log_data(
     logger.log(
         level,
         (
-                message + "\n"
-                + "\n".join(
-            f"\t{key}: {value!r}" for key, value in data.items())
+            message + "\n"
+            + "\n".join(
+                f"\t{key}: {value!r}" for key, value in data.items())
         ),
         exc_info=exc_info
     )
