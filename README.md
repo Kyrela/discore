@@ -143,10 +143,12 @@ command_error:
   not_found: "Sorry, I couldn't find anything that matched what you indicated."
   exception: "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```\nFile '%{file}', line '%{line}', command '%{command}'\n%{error}: %{error_message}\n```"
   invite_message: "A bug has occurred. This invitation will allow, if needed, the developer to access the server, to understand why the bug occurred. This invitation is limited to one use, grants only the status of temporary member, and lasts maximum 1 day."
-  on_cooldown: "This command is on cooldown. Try again in %{cooldown_time} seconds."
+  on_cooldown: "This command is on cooldown. Try again %{cooldown_time}."
   invalid_quoted_string: "Sorry, but I couldn't correctly process the arguments. Maybe you forgot to put a space after a closing quote ?"
   bot_missing_permission: "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
   user_missing_permission: "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
+  private_message_only: "This command can only be used in private messages."
+  no_private_message: "This command cannot be used in private messages."
 
 app_error:
   transformer: "The argument `%{argument_value}` is incorrect.\nTry \n```\n%{command_usage}\n```\nFor more information on usage, send\n```\n%{help_command}\n```"
@@ -155,7 +157,7 @@ app_error:
   missing_any_role: "You need one of the following roles to use this command: `%{roles_list}`."
   missing_permissions: "You need the following permissions to use this command: `%{permissions_list}`."
   bot_missing_permissions: "I need the following permissions to use this command: `%{permissions_list}`."
-  cooldown: "This command is on cooldown. Try again in %{cooldown_time} seconds."
+  on_cooldown: "This command is on cooldown. Try again %{cooldown_time}."
   command_not_found: "Command not found, please refresh your discord client."
 ```
 

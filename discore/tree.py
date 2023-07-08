@@ -3,6 +3,8 @@ The class that represent the bot's command tree
 """
 
 import logging
+import time
+
 from i18n import t
 
 from discord import *
@@ -90,8 +92,8 @@ class CommandTree(app_commands.CommandTree):
                 permissions_list=", ".join(error.missing_permissions)), ephemeral=True)
         elif isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(t(
-                'app_error.cooldown',
-                cooldown_time=abs(error.retry_after)), ephemeral=True)
+                'app_error.on_cooldown',
+                cooldown_time="<t:" + str(int(time.time() + error.retry_after)) + ":R>", ephemeral=True))
         elif isinstance(error, app_commands.CommandNotFound):
             await self.sync(guild=interaction.guild)
             await interaction.response.send_message(

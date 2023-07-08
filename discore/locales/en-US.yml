@@ -36,5 +36,5 @@ app_error:
   missing_any_role: "You need one of the following roles to use this command: `%{roles_list}`."
   missing_permissions: "You need the following permissions to use this command: `%{permissions_list}`."
   bot_missing_permissions: "I need the following permissions to use this command: `%{permissions_list}`."
-  cooldown: "This command is on cooldown. Try again in %{cooldown_time} seconds."
+  on_cooldown: "This command is on cooldown. Try again %{cooldown_time}."
   command_not_found: "Command not found, please refresh your discord client."
