@@ -30,6 +30,7 @@ __all__ = (
     'sanitize',
     'log_command_error',
     'log_data',
+    'set_embed_footer',
 ) + discord.utils.__all__
 
 class SparseFormatter(string.Formatter):
@@ -540,14 +541,30 @@ async def log_data(
     if not config.log.channel:
         return
 
-    embed = discord.Embed(title=message, color=config.color or None)
-    embed.set_footer(
-        text=bot.user.name + (
-            f" | ver. {config.version}" if config.version else ""),
-        icon_url=bot.user.display_avatar.url
-    )
+    embed = discord.Embed(title=message)
+    set_embed_footer(bot, embed)
 
     for key, value in data.items():
         embed.add_field(name=key, value=value, inline=False)
 
     await bot.get_channel(config.log.channel).send(traceback, embed=embed)
+
+
+def set_embed_footer(
+        bot: discord.Client, embed: discord.Embed, set_color: bool = True) -> None:
+    """
+    Sets the footer of an embed to the bot's name, avatar, color and version
+
+    :param bot: The bot instance
+    :param embed: The embed to set the footer of
+    :param set_color: Whether to set the color of the embed to the bot's color or not
+    :return: None
+    """
+
+    embed.set_footer(
+        text=bot.user.name + (
+            f" | ver. {config.version}" if config.version else ""),
+        icon_url=bot.user.display_avatar.url
+    )
+    if set_color and (embed.colour is None) and config.color:
+        embed.colour = config.color

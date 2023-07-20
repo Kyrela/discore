@@ -14,7 +14,7 @@ import functools
 from typing import Any, Dict, Generator, Callable, List, Optional, Union, Iterable
 from i18n import t
 
-from .utils import config, fallback_reply
+from .utils import config, fallback_reply, set_embed_footer
 
 
 __all__ = ('EmbedHelpCommand', 'HelpHybridCommand')
@@ -528,17 +528,6 @@ class EmbedHelpCommand(HelpHybridCommand):
         kwargs.setdefault("with_app_command", True)
         super().__init__(**kwargs)
 
-    async def str_embed_footer(self, embed: discord.Embed):
-        """
-        Set the footer of the help message
-
-        :param embed: the embed where to put the default message
-        """
-        embed.set_footer(
-            text=f"{self.context.bot.user.name}" + (f" | ver. {config.version}" if config.version else ""),
-            icon_url=self.context.bot.user.display_avatar.url
-        )
-
     async def send_bot_help(self, mapping):
         """
         send the main help message
@@ -561,8 +550,7 @@ class EmbedHelpCommand(HelpHybridCommand):
             title=t("help.bot.title"),
             description=(
                 ((bot.description + "\n\n") if bot.description else "") +
-                t("help.bot.description", help_command=self.context.clean_prefix + self.invoked_with)),
-            color=config.color or None
+                t("help.bot.description", help_command=self.context.clean_prefix + self.invoked_with))
         )
 
         for category, commands in to_iterate:
@@ -573,7 +561,7 @@ class EmbedHelpCommand(HelpHybridCommand):
                 inline=False
             )
 
-        await self.str_embed_footer(e)
+        set_embed_footer(self.context.bot, e)
         await fallback_reply(ctx, embed=e)
 
     async def send_cog_help(self, cog):
@@ -590,8 +578,7 @@ class EmbedHelpCommand(HelpHybridCommand):
 
         e = discord.Embed(
             title=t("help.cog.title", cog=cog.qualified_name),
-            description=cog.description,
-            color=config.color or None
+            description=cog.description
         )
 
         e.add_field(
@@ -601,7 +588,7 @@ class EmbedHelpCommand(HelpHybridCommand):
             inline=False
         )
 
-        await self.str_embed_footer(e)
+        set_embed_footer(self.context.bot, e)
         await fallback_reply(ctx, embed=e)
 
     async def send_command_help(self, command: commands.Command):
@@ -620,11 +607,10 @@ class EmbedHelpCommand(HelpHybridCommand):
                     (command.description + "\n\n" if command.description else "") +
                     f"```{self.get_command_signature(command)}```" +
                     ("\n" + command.help if command.help else "")
-            ),
-            color=config.color or None
+            )
         )
 
-        await self.str_embed_footer(e)
+        set_embed_footer(self.context.bot, e)
         await fallback_reply(ctx, embed=e)
 
     async def send_group_help(self, group: commands.Group):
@@ -641,8 +627,7 @@ class EmbedHelpCommand(HelpHybridCommand):
 
         e = discord.Embed(
             title=group.qualified_name,
-            description=group.description,
-            color=config.color or None
+            description=group.description
         )
 
         e.add_field(
@@ -652,7 +637,7 @@ class EmbedHelpCommand(HelpHybridCommand):
             inline=False
         )
 
-        await self.str_embed_footer(e)
+        set_embed_footer(self.context.bot, e)
         await fallback_reply(ctx, embed=e)
 
     async def command_not_found(self, command_name):
@@ -690,9 +675,8 @@ class EmbedHelpCommand(HelpHybridCommand):
 
         e = discord.Embed(
             title=t("help.bot.title"),
-            description=error,
-            color=config.color or None
+            description=error
         )
 
-        await self.str_embed_footer(e)
+        set_embed_footer(self.context.bot, e)
         await fallback_reply(self.context, embed=e)
