@@ -68,7 +68,7 @@ help:
     usage: "[command | category]"
     brief: "Shows help about the bot"
     aliases: ["h", "hp"]
-    cooldown: 5
+    cooldown: null
     enabled: true
     hidden: false
 
