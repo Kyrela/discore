@@ -71,6 +71,8 @@ class Bot(commands.Bot):
 
         help_cog_name = config.help.cog.title() if config.help.cog else None
 
+        loaded_cogs = []
+
         if path.isdir("cogs"):
             for file in os.listdir("cogs"):
 
@@ -84,7 +86,10 @@ class Bot(commands.Bot):
 
                 if help_cog_name == cog_name:
                     self.help_command.cog = new_cog
-                _log.info(f"Cog {cog_name!r} loaded")
+
+                loaded_cogs.append(cog_name)
+
+        _log.info(f"Cogs successfully loaded: {', '.join(map(repr, loaded_cogs))}")
 
         if help_cog_name and not self.help_command.cog:
             raise ModuleNotFoundError(
@@ -128,7 +133,7 @@ class Bot(commands.Bot):
             if sync_res is None:
                 _log.error("Failed to sync the tree")
             elif sync_res:
-                _log.info(f"Slash commands successfully synced: {', '.join([c.name for c in sync_res])}")
+                _log.info(f"Slash commands successfully synced: {', '.join([repr(c.name) for c in sync_res])}")
             else:
                 _log.info("No slash commands to sync")
         _log.info(f"Bot launched in {(self.start_time - self.initialisation_time).total_seconds():.3f}s,"
