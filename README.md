@@ -62,32 +62,33 @@ case_insensitive: true
 locale: "en-US"
 
 help:
-    cog: "system"
-    name: "help"
-    help: "Shows this message"
-    description: "Shows help about the bot, a command, or a category"
-    usage: "[command | category]"
-    brief: "Shows help about the bot"
-    aliases: ["h", "hp"]
-    cooldown: null
-    enabled: true
-    hidden: false
+  cog: "system"
+  name: "help"
+  help: "Shows this message"
+  description: "Shows help about the bot, a command, or a category"
+  usage: "[command | category]"
+  brief: "Shows help about the bot"
+  aliases: ["h", "hp"]
+  cooldown: null
+  enabled: true
+  hidden: false
 
 log:
-    channel: 1111111111111
-    file: "log.txt"
-    level: "INFO"
-    root: true
-    stream_to_err: true
-    format: "[{asctime}] {levelformat} {name}: {message}"
-    date_format: "%d/%m/%Y %H:%M:%S"
-    create_invite: true
-    level_format:
-        debug: "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
-        info: "[{blue}{bold}INFO{no_bold}{normal}]    "
-        warning: "[{yellow}{bold}WARNING{no_bold}{normal}] "
-        error: "[{red}ERROR{normal}]   "
-        critical: "[{bg_red}CRITICAL{bg_normal}]"
+  channel: 1111111111111
+  file: "log.txt"
+  stream: true
+  level: "INFO"
+  root: true
+  stream_to_err: true
+  format: "[{asctime}] {levelformat} {name}: {message}"
+  date_format: "%d/%m/%Y %H:%M:%S"
+  create_invite: true
+  level_format:
+    debug: "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
+    info: "[{blue}{bold}INFO{no_bold}{normal}]    "
+    warning: "[{yellow}{bold}WARNING{no_bold}{normal}] "
+    error: "[{red}ERROR{normal}]   "
+    critical: "[{bg_red}CRITICAL{bg_normal}]"
 ```
 
 > Note : the log file is created if it does not exist, and all variables are optional except 'token'.
@@ -193,9 +194,11 @@ app_error:
 - `log`
   - `channel`: the channel where the information and errors should be logged, if any (int)
   - `file`: the file where the information and errors should be logged, if any
+  - `stream`: whether the logs should be streamed to the console or not
   - `level`: the level of logs to be displayed in the console. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
   - `root`: whether the whole hierarchy of the bot should be logged
-  - `stream_to_err`: whether the logs should be streamed to the error stream (stderr) or the output stream (stdout)
+  - `stream_to_err`: whether the logs should be streamed to the error stream (`stderr`) or the output stream (`stdout`)
+    (if `stream` is `true`)
   - `format`: the format of the logs. The following variables can (but don't have to) be used:
     - `{asctime}`: the date and time of the log
     - `{name}`: the name of the logger
@@ -203,7 +206,7 @@ app_error:
     - `{message}`: the message of the log
     - `{levelformat}`: the level of the log, formatted according to the `level_format` variable
   - `date_format`: the format of the date and time of the log
-  - `create_invite`: whether or not an invite should be created when an error occurs
+  - `create_invite`: whether or not an invite to the invocation guild should be created when an error occurs
   - `level_format`:
     - `debug`: the format of the debug level
     - `info`: the format of the info level

@@ -3,6 +3,7 @@ hot_reload: true
 locale: "en-US"
 case_insensitive: true
 log:
+  stream: true
   level: "INFO"
   root: true
   stream_to_err: true

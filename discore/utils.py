@@ -288,12 +288,16 @@ def logging_init(**kwargs) -> None:
     """
     log_level = kwargs.pop("log_level", config.log.level)
     given_formatter = kwargs.pop("formatter", None)
-    stream = kwargs.pop("stream", sys.stderr if config.log.stream_to_err else sys.stdout)
-    stream_handler = kwargs.pop("log_handler", logging.StreamHandler(stream))
-    stream_formatter = given_formatter or Formatter()
-    stream_handler.setFormatter(stream_formatter)
 
-    handlers = [stream_handler]
+    handlers = []
+
+    log_stream = kwargs.pop("log_stream", config.log.stream)
+    if log_stream:
+        stream = kwargs.pop("stream", sys.stderr if config.log.stream_to_err else sys.stdout)
+        stream_handler = kwargs.pop("log_handler", logging.StreamHandler(stream))
+        stream_formatter = given_formatter or Formatter()
+        stream_handler.setFormatter(stream_formatter)
+        handlers.append(stream_handler)
 
     log_file = kwargs.pop("log_file", config.log.file)
     if log_file:
