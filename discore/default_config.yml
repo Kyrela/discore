@@ -5,6 +5,7 @@ case_insensitive: true
 log:
   level: "INFO"
   root: true
+  stream_to_err: true
   format: "[{asctime}] {levelformat} {name}: {message}"
   date_format: "%Y-%m-%d %H:%M:%S"
   create_invite: false

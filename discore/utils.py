@@ -288,7 +288,8 @@ def logging_init(**kwargs) -> None:
     """
     log_level = kwargs.pop("log_level", config.log.level)
     given_formatter = kwargs.pop("formatter", None)
-    stream_handler = kwargs.pop("log_handler", logging.StreamHandler())
+    stream = kwargs.pop("stream", sys.stderr if config.log.stream_to_err else sys.stdout)
+    stream_handler = kwargs.pop("log_handler", logging.StreamHandler(stream))
     stream_formatter = given_formatter or Formatter()
     stream_handler.setFormatter(stream_formatter)
 

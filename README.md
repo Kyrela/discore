@@ -78,6 +78,7 @@ log:
     file: "log.txt"
     level: "INFO"
     root: true
+    stream_to_err: true
     format: "[{asctime}] {levelformat} {name}: {message}"
     date_format: "%d/%m/%Y %H:%M:%S"
     create_invite: true
@@ -194,6 +195,7 @@ app_error:
   - `file`: the file where the information and errors should be logged, if any
   - `level`: the level of logs to be displayed in the console. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
   - `root`: whether the whole hierarchy of the bot should be logged
+  - `stream_to_err`: whether the logs should be streamed to the error stream (stderr) or the output stream (stdout)
   - `format`: the format of the logs. The following variables can (but don't have to) be used:
     - `{asctime}`: the date and time of the log
     - `{name}`: the name of the logger
