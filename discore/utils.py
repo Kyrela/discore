@@ -539,12 +539,19 @@ async def log_data(
         (
             message + "\n"
             + "\n".join(
-                f"\t{key}: {value!r}" for key, value in data.items())
+                f"\t{key}: " + (f"'{value}'" if isinstance(value, str) else str(value))
+                for key, value in data.items())
         ),
         exc_info=exc_info
     )
 
     if not config.log.channel:
+        return
+
+    channel = bot.get_channel(config.log.channel)
+
+    if channel is None:
+        logger.error(f"Could not send log message: channel {config.log.channel!r} not found")
         return
 
     embed = discord.Embed(title=message)
@@ -553,7 +560,7 @@ async def log_data(
     for key, value in data.items():
         embed.add_field(name=key, value=value, inline=False)
 
-    await bot.get_channel(config.log.channel).send(traceback, embed=embed)
+    await channel.send(traceback, embed=embed)
 
 
 def set_embed_footer(
