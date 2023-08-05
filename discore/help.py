@@ -290,7 +290,7 @@ class HelpHybridCommand(commands.HelpCommand):
             return await self.send_command_help(cmd)
 
     async def prepare_help_command(self, ctx: commands.Context, command: Optional[str] = None, /) -> None:
-        self._command_prefix = await ctx.bot.get_prefix(ctx.message)
+        self._command_prefix = '/' if ctx.interaction is not None else await ctx.bot.get_prefix(ctx.message)
 
     def get_cog(self, command: CommandTextApp, /) -> Optional[commands.Cog]:
         """Retrieves the proper cog that should be associated with the command.
