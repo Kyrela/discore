@@ -9,6 +9,7 @@ from os import path
 import logging
 import datetime
 from importlib.metadata import version
+from typing import Union, Type, Any
 from i18n import t
 
 from discord.ext import commands
@@ -17,7 +18,8 @@ import discord
 from .help import EmbedHelpCommand
 from .tree import CommandTree
 from .utils import (config, config_init, logging_init, i18n_init, set_locale, sanitize,
-                    fallback_reply, get_command_usage, log_command_error, log_data)
+                    fallback_reply, get_command_usage, log_command_error, log_data,
+                    CaseInsensitiveStringView as StringView)
 
 __all__ = ('Bot',)
 
@@ -142,7 +144,21 @@ class Bot(commands.Bot):
     async def on_resumed(self):
         _log.info("Bot resumed")
 
-    async def invoke(self, ctx: commands.Context, /) -> None:
+    async def invoke(self, ctx: commands.Context[commands._types.BotT], /) -> None:
+        """|coro|
+
+        Invokes the command given under the invocation context and
+        handles all the internal event dispatch mechanisms.
+
+        .. versionchanged:: 2.0
+
+            ``ctx`` parameter is now positional-only.
+
+        Parameters
+        -----------
+        ctx: :class:`.Context`
+            The invocation context to invoke.
+        """
         if ctx.command is not None:
             self.dispatch('command', ctx)
             set_locale(ctx)
@@ -158,6 +174,107 @@ class Bot(commands.Bot):
         elif ctx.invoked_with:
             exc = commands.errors.CommandNotFound(f'Command "{ctx.invoked_with}" is not found')
             self.dispatch('command_error', ctx, exc)
+
+    async def get_context(
+            self,
+            origin: Union[discord.Message, discord.Interaction],
+            /,
+            *,
+            cls: Type[commands._types.ContextT] = discord.utils.MISSING,
+    ) -> Any:
+        r"""|coro|
+
+        Returns the invocation context from the message or interaction.
+
+        This is a more low-level counter-part for :meth:`.process_commands`
+        to allow users more fine grained control over the processing.
+
+        The returned context is not guaranteed to be a valid invocation
+        context, :attr:`.Context.valid` must be checked to make sure it is.
+        If the context is not valid then it is not a valid candidate to be
+        invoked under :meth:`~.Bot.invoke`.
+
+        .. note::
+
+            In order for the custom context to be used inside an interaction-based
+            context (such as :class:`HybridCommand`) then this method must be
+            overridden to return that class.
+
+        .. versionchanged:: 2.0
+
+            ``message`` parameter is now positional-only and renamed to ``origin``.
+
+        Parameters
+        -----------
+        origin: Union[:class:`discord.Message`, :class:`discord.Interaction`]
+            The message or interaction to get the invocation context from.
+        cls
+            The factory class that will be used to create the context.
+            By default, this is :class:`.Context`. Should a custom
+            class be provided, it must be similar enough to :class:`.Context`\'s
+            interface.
+
+        Returns
+        --------
+        :class:`.Context`
+            The invocation context. The type of this can change via the
+            ``cls`` parameter.
+        """
+        if cls is discord.utils.MISSING:
+            cls = commands.Context
+
+        if isinstance(origin, discord.Interaction):
+            return await cls.from_interaction(origin)
+
+        string_view_cls = StringView if config.case_insensitive else commands.view.StringView
+
+        view = string_view_cls(origin.content)
+        ctx = cls(view=view, bot=self, message=origin)
+
+        if origin.author.id == self.user.id:
+            return ctx
+
+        prefix = await self.get_prefix(origin)
+        invoked_prefix = prefix
+
+        if isinstance(prefix, str):
+            if not view.skip_string(prefix):
+                return ctx
+        else:
+            try:
+                # if the context class' __init__ consumes something from the view this
+                # will be wrong.  That seems unreasonable though.
+                if origin.content.startswith(tuple(prefix)):
+                    invoked_prefix = discord.utils.find(view.skip_string, prefix)
+                else:
+                    return ctx
+
+            except TypeError:
+                if not isinstance(prefix, list):
+                    raise TypeError(
+                        "get_prefix must return either a string or a list of string, " f"not {prefix.__class__.__name__}"
+                    )
+
+                # It's possible a bad command_prefix got us here.
+                for value in prefix:
+                    if not isinstance(value, str):
+                        raise TypeError(
+                            "Iterable command_prefix or list returned from get_prefix must "
+                            f"contain only strings, not {value.__class__.__name__}"
+                        )
+
+                # Getting here shouldn't happen
+                raise
+
+        if self.strip_after_prefix:
+            view.skip_ws()
+
+        invoker = view.get_word()
+        ctx.invoked_with = invoker
+        # type-checker fails to narrow invoked_prefix type.
+        ctx.prefix = invoked_prefix  # type: ignore
+        ctx.command = self.all_commands.get(invoker)
+        return ctx
 
     async def on_command(self, ctx: commands.Context):
         if ctx.interaction:

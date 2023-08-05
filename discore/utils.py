@@ -31,6 +31,7 @@ __all__ = (
     'log_command_error',
     'log_data',
     'set_embed_footer',
+    'CaseInsensitiveStringView',
 ) + discord.utils.__all__
 
 class SparseFormatter(string.Formatter):
@@ -568,3 +569,23 @@ def set_embed_footer(
     )
     if set_color and (embed.colour is None) and config.color:
         embed.colour = config.color
+
+
+class CaseInsensitiveStringView(commands.bot.StringView):
+    """
+    A modified string view that is case insensitive
+    """
+
+    def __init__(self, buffer: str) -> None:
+        self.index: int = 0
+        self.buffer: str = buffer.lower()
+        self.end: int = len(buffer)
+        self.previous = 0
+
+    def skip_string(self, string: str) -> bool:
+        strlen = len(string)
+        if self.buffer[self.index: self.index + strlen].lower() == string.lower():
+            self.previous = self.index
+            self.index += strlen
+            return True
+        return False

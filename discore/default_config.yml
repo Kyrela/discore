@@ -1,6 +1,7 @@
 prefix: "!"
 hot_reload: true
 locale: "en-US"
+case_insensitive: true
 log:
   level: "INFO"
   root: true
