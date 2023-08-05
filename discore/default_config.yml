@@ -6,7 +6,7 @@ log:
   level: "INFO"
   root: true
   format: "[{asctime}] {levelformat} {name}: {message}"
-  date_format: "%d/%m/%Y %H:%M:%S"
+  date_format: "%Y-%m-%d %H:%M:%S"
   create_invite: false
   level_format:
     debug: "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
