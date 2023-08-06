@@ -469,3 +469,9 @@ class Bot(commands.Bot):
         _log.info(
             f"{i.command.name!r} app command request sent by {str(i.user)!r} "
             f"({i.user.id!r}) with invocation \"{args!r}\"")
+
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        await self.process_commands(message)
