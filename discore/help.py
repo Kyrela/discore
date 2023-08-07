@@ -430,15 +430,37 @@ class HelpHybridCommand(commands.HelpCommand):
             :class:`str`
                 The command signature in str form.
         """
-        signature = ' '
-        if isinstance(command, commands.Command):
-            signature += command.signature
-        elif isinstance(command, app_commands.Group):
-            signature = ''
-        else:
-            signature += get_app_signature(command)
 
-        return f'{self.get_prefix(command)}{command.qualified_name}{signature}'
+        if isinstance(command, commands.Command):
+            signature = command.signature
+        elif not isinstance(command, app_commands.Group):
+            signature = get_app_signature(command)
+        else:
+            signature = ''
+
+        if isinstance(command, commands.Command):
+            parent: Optional[Group[Any, ..., Any]] = command.parent  # type: ignore # the parent will be a Group
+            entries = []
+            while parent is not None:
+                if not parent.signature or parent.invoke_without_command:
+                    entries.append(parent.name)
+                else:
+                    entries.append(parent.name + ' ' + parent.signature)
+                parent = parent.parent  # type: ignore
+            parent_sig = ' '.join(reversed(entries))
+
+            if len(command.aliases) > 0 and self.context.interaction is None:
+                aliases = '|'.join(command.aliases)
+                fmt = f'[{command.name}|{aliases}]'
+                if parent_sig:
+                    fmt = parent_sig + ' ' + fmt
+                alias = fmt
+            else:
+                alias = command.name if not parent_sig else parent_sig + ' ' + command.name
+        else:
+            alias = command.qualified_name
+
+        return f'{self.get_prefix(command)}{alias} {signature}'
 
     def get_command_description(self, command: CommandTextApp, /, *, brief: bool = False
                                 ) -> Optional[str]:
