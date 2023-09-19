@@ -381,6 +381,11 @@ async def fallback_reply(
         if destination.response.is_done():
             return await destination.channel.send(*args, **kwargs)
         await destination.response.send_message(*args, **kwargs)
+    if isinstance(destination, discord.Message):
+        try:
+            return await destination.reply(*args, **kwargs)
+        except discord.errors.HTTPException:
+            return await destination.channel.send(*args, **kwargs)
     else:
         return await destination.send(*args, **kwargs)
 
