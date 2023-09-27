@@ -3,6 +3,7 @@ The class representing the Discord bot
 """
 
 import asyncio
+import importlib
 import os
 import time
 from os import path
@@ -51,7 +52,12 @@ class Bot(commands.Bot):
         config_init(**kwargs)
         logging_init(**kwargs)
         i18n_init(**kwargs)
-        _log.info(f"Bot initialising... discore v{version('discore')}, discord.py v{version('discord.py')}")
+        discore_version = '?'
+        try:
+            discore_version = version('discore')
+        except importlib.metadata.PackageNotFoundError:
+            pass
+        _log.info(f"Bot initialising... discore v{discore_version}, discord.py v{version('discord.py')}")
 
         super().__init__(
             command_prefix=command_prefix or config.prefix,
