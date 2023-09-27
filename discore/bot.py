@@ -284,7 +284,7 @@ class Bot(commands.Bot):
         ctx.invoked_with = invoker
         # type-checker fails to narrow invoked_prefix type.
         ctx.prefix = invoked_prefix  # type: ignore
-        ctx.command = self.all_commands.get(invoker)
+        ctx.command = self.all_commands.get(invoker.lower() if config.case_insensitive else invoker)
         return ctx
 
     async def on_command(self, ctx: commands.Context):
