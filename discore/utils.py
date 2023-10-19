@@ -378,6 +378,7 @@ async def fallback_reply(
         except discord.errors.HTTPException:
             return await destination.send(*args, **kwargs)
     if isinstance(destination, discord.Interaction):
+        kwargs.pop("mention_author")
         if destination.response.is_done():
             return await destination.channel.send(*args, **kwargs)
         await destination.response.send_message(*args, **kwargs)
