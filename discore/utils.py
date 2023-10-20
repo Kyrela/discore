@@ -381,7 +381,7 @@ async def fallback_reply(
         kwargs.pop("mention_author")
         if destination.response.is_done():
             return await destination.channel.send(*args, **kwargs)
-        await destination.response.send_message(*args, **kwargs)
+        return await destination.response.send_message(*args, **kwargs, ephemeral=True)
     if isinstance(destination, discord.Message):
         try:
             return await destination.reply(*args, **kwargs)
