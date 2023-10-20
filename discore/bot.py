@@ -458,10 +458,11 @@ class Bot(commands.Bot):
             message_log_infos += [
                 f"starting with the text '{short_content}'"]
         for embed in rep.embeds:
-            short_content = sanitize(embed.description, 120)
             message_log_infos += [
-                f"containing an embed with name {embed.title!r}, "
-                f"and with description starting with '{short_content}'"]
+                f"containing an embed with name {embed.title!r}"]
+            if embed.description:
+                short_content = sanitize(embed.description, 120)
+                message_log_infos[-1] += f", and with description starting with '{short_content}'"
         for attachment in rep.attachments:
             message_log_infos += [
                 f"containing an file with name "
