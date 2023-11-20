@@ -21,6 +21,7 @@ A core for initialise, run and tracks errors of discord.py bots, with a "Convent
 **Python 3.6 or above is required**
 
 Just run the following command
+
 ```bash
 pip install git+https://github.com/Kyrela/discore
 ```
@@ -28,6 +29,7 @@ pip install git+https://github.com/Kyrela/discore
 ## Usage example
 
 project architecture
+
 ```
 project
 ├─ main.py   # name can be anything
@@ -41,8 +43,10 @@ project
 ```
 
 `main.py` code:
+
 ```python
 import discore
+
 bot = discore.Bot()  # if the name of the config file is different from 'config.toml', it should be passed as an argument here. 
 
 # Your usual commands here, or in a cog
@@ -51,6 +55,7 @@ bot.run()
 ```
 
 `config.yml`:
+
 ```yaml
 prefix: "!"
 token: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -68,7 +73,7 @@ help:
   description: "Shows help about the bot, a command, or a category"
   usage: "[command | category]"
   brief: "Shows help about the bot"
-  aliases: ["h", "hp"]
+  aliases: [ "h", "hp" ]
   cooldown: null
   enabled: true
   hidden: false
@@ -76,30 +81,35 @@ help:
 log:
   channel: 1111111111111
   file: "log.txt"
+  alert_user: true
   stream: true
   level: "INFO"
   root: true
   stream_to_err: true
   format: "[{asctime}] {levelformat} {name}: {message}"
   date_format: "%d/%m/%Y %H:%M:%S"
-  create_invite: true
   level_format:
     debug: "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
     info: "[{blue}{bold}INFO{no_bold}{normal}]    "
     warning: "[{yellow}{bold}WARNING{no_bold}{normal}] "
     error: "[{red}ERROR{normal}]   "
     critical: "[{bg_red}CRITICAL{bg_normal}]"
+
+override_config: override.config.yml
 ```
 
 > Note : the log file is created if it does not exist, and all variables are optional except 'token'.
 > If a variable isn't provided, its value is set to the value showed in this example, except for
-> `log.channel`, `log.file`, `version`, `color` and `description`, `help.*`, as they are
+> `log.channel`, `log.file`, `version`, `color`, `description`, `help.*`, and `override_config` as they are
 > set to `None`. More information on used variables below.
 > You can of course store additional information in the file and access them at anytime, anywhere.
 
 `cog1.py`:
+
 ```py
 import discore
+
+
 class Cog1(discore.Cog, name="cog1", description="the cog containing some commands"):
     @discore.command(
         name="say",
@@ -110,17 +120,18 @@ class Cog1(discore.Cog, name="cog1", description="the cog containing some comman
     async def say(self, ctx, *, message: str):
         await ctx.message.delete()
         await ctx.send(message)
-    
+
     @discore.command(
-      name="ping",
-      brief="check if the bot is online",
-      description="Responds with a simple message, useful to see if the bot is online"
+        name="ping",
+        brief="check if the bot is online",
+        description="Responds with a simple message, useful to see if the bot is online"
     )
     async def ping(self, ctx):
-      await ctx.message.reply("Pong!")
+        await ctx.message.reply("Pong!")
 ```
 
 `en-US.yml`:
+
 ```yaml
 help:
   no_commands: "*No commands*"
@@ -174,110 +185,121 @@ app_error:
 - `version`: the version of the bot, if any
 - `color`: the color that should be used in embeds, if any
 - `help_cog`: the name of the cog containing the help command. If not provided, no cog will be assigned.
-- `hot_reload`: whether or not the bot should reload the cogs when they are modified. Also describe if 
+- `hot_reload`: whether or not the bot should reload the cogs when they are modified. Also describe if
   localisations should be loaded from memory or from the disk.
 - `case_insensitive`: whether the prefix and the commands should be case insensitive (e.g. `!ping` and `!PING` are
   equivalent)
 - `locale`: The default locale of the bot, if none is found at the command's call
-- `help` : the help command's configuration - below configuration is a non-exhaustive list of the available options 
+- `help` : the help command's configuration - below configuration is a non-exhaustive list of the available options
   (passed as kwargs to the `HelpCommand` constructor)
-  - `cog`: the name of the cog to which the command should belong, if any. Correspond to the class name
-  - `name`: the name of the help command
-  - `help`: the help message for the help command
-  - `description`: the description of the help command
-  - `usage`: the usage of the help command
-  - `brief`: the short description of the help command
-  - `aliases`: the aliases of the help command
-  - `cooldown`: the cooldown of the help command
-  - `enabled`: whether the help command should be enabled
-  - `hidden`: whether the help command should be hidden
+    - `cog`: the name of the cog to which the command should belong, if any. Correspond to the class name
+    - `name`: the name of the help command
+    - `help`: the help message for the help command
+    - `description`: the description of the help command
+    - `usage`: the usage of the help command
+    - `brief`: the short description of the help command
+    - `aliases`: the aliases of the help command
+    - `cooldown`: the cooldown of the help command
+    - `enabled`: whether the help command should be enabled
+    - `hidden`: whether the help command should be hidden
 - `log`
-  - `channel`: the channel where the information and errors should be logged, if any (int)
-  - `file`: the file where the information and errors should be logged, if any
-  - `stream`: whether the logs should be streamed to the console or not
-  - `level`: the level of logs to be displayed in the console. Can be one of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
-  - `root`: whether the whole hierarchy of the bot should be logged
-  - `stream_to_err`: whether the logs should be streamed to the error stream (`stderr`) or the output stream (`stdout`)
-    (if `stream` is `true`)
-  - `format`: the format of the logs. The following variables can (but don't have to) be used:
-    - `{asctime}`: the date and time of the log
-    - `{name}`: the name of the logger
-    - `{levelname}`: the level of the log
-    - `{message}`: the message of the log
-    - `{levelformat}`: the level of the log, formatted according to the `level_format` variable
-  - `date_format`: the format of the date and time of the log
-  - `create_invite`: whether or not an invite to the invocation guild should be created when an error occurs
-  - `level_format`:
-    - `debug`: the format of the debug level
-    - `info`: the format of the info level
-    - `warning`: the format of the warning level
-    - `error`: the format of the error level
-    - `critical`: the format of the critical level
+    - `channel`: the channel where the information and errors should be logged, if any (int)
+    - `file`: the file where the information and errors should be logged, if any
+    - `alert_user`: whether the bot should send a message to the user that called the command if a code-related error
+      occurred
+    - `stream`: whether the logs should be streamed to the console or not
+    - `level`: the level of logs to be displayed in the console. Can be one
+      of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+    - `root`: whether the whole hierarchy of the bot should be logged
+    - `stream_to_err`: whether the logs should be streamed to the error stream (`stderr`) or the output
+      stream (`stdout`)
+      (if `stream` is `true`)
+    - `format`: the format of the logs. The following variables can (but don't have to) be used:
+        - `{asctime}`: the date and time of the log
+        - `{name}`: the name of the logger
+        - `{levelname}`: the level of the log
+        - `{message}`: the message of the log
+        - `{levelformat}`: the level of the log, formatted according to the `level_format` variable
+    - `date_format`: the format of the date and time of the log
+    - `level_format`:
+        - `debug`: the format of the debug level
+        - `info`: the format of the info level
+        - `warning`: the format of the warning level
+        - `error`: the format of the error level
+        - `critical`: the format of the critical level
+- `override_config`: the name of the file containing the override configuration, if any
 
 ## List of localisation variables
 
 - `help`
-  - `no_commands`: the message that should appear when there is no commands in the bot, cog or group
-  - `bot`
-    - `title`: the title that should appear at the top of the help message
-    - `description`: the description of the help message. Can be information on his usages.  `%{help_command}` is
-      the invocation of the help command
-    - `no_category`: the title that should appear on top of the 'No cog-related' section
-  - `cog`
-    - `title`: the title that should appear at the top of the help message related to a cog. `%{cog}` is the name of the
-      cog
-    - `commands`: the of the commands section
-  - `group`
-    - `title`: the title that should appear at the top of the help message related to a command group. `%{group}` is the
-      name of the command group
-  - `command`
-    - `title`: the title that should appear at the top of the help message related to a command. `%{command}` is the
-      name of the command
-    - `not_found`: the message that should appear if no command corresponding to a name is found. `%{command}` is the
-      name of the searched command
-  - `subcommand`
-    - `not_found`: the message that should appear if no subcommand of a command corresponding to a name is found.
-      `%{command}` is the name of the searched command, `%{subcommand}` of the searched subcommand
-    - `no_subcommand`: the message that should appear if a command doesn't have any subcommand. `%{command}` is the name
-      of the command
+    - `no_commands`: the message that should appear when there is no commands in the bot, cog or group
+    - `bot`
+        - `title`: the title that should appear at the top of the help message
+        - `description`: the description of the help message. Can be information on his usages.  `%{help_command}` is
+          the invocation of the help command
+        - `no_category`: the title that should appear on top of the 'No cog-related' section
+    - `cog`
+        - `title`: the title that should appear at the top of the help message related to a cog. `%{cog}` is the name of
+          the
+          cog
+        - `commands`: the of the commands section
+    - `group`
+        - `title`: the title that should appear at the top of the help message related to a command group. `%{group}` is
+          the
+          name of the command group
+    - `command`
+        - `title`: the title that should appear at the top of the help message related to a command. `%{command}` is the
+          name of the command
+        - `not_found`: the message that should appear if no command corresponding to a name is found. `%{command}` is
+          the
+          name of the searched command
+    - `subcommand`
+        - `not_found`: the message that should appear if no subcommand of a command corresponding to a name is found.
+          `%{command}` is the name of the searched command, `%{subcommand}` of the searched subcommand
+        - `no_subcommand`: the message that should appear if a command doesn't have any subcommand. `%{command}` is the
+          name
+          of the command
 - `command_error`
-  - `bad_argument`: the message that should be sent if a command is used with the wrong arguments. `%{command_usage}` is
-    the command signature, `%{help_command}` is the help command to get help on this command
-  - `missing_argument`: the message that should be sent if a command is used with not enough arguments.
-    `%{command_usage}` is the command signature, `%{help_command}` is the help command to get help on this command
-  - `not_found`: the message that should be sent if a command is used with unknown arguments (ex: discord member that
-    doesn't exist)
-  - `exception`: the message that should be sent if a command raises an internal error. `%{file}` is the file where the
-    error has been raised, `%{line}` is the line where the error has been raised, `%{command}` is the name of the
-    command, `%{error}` is the error type, `%{error_message}` is the error message
-  - `invite_message`: the message that should be used as a reason to justify the creation of an invitation to the
-    server where the bug as been raised
-  - `on_cooldown`: the message that should be sent if a command is used while it is on cooldown. `%{cooldown_time}` is
-    the cooldown duration in seconds
-  - `invalid_quoted_string`: the message that should be sent if a quoted string is badly or not closed
-  - `bot_missing_permission`: the message that should be sent if the bot doesn't have the necessary rights to execute
-    this command
-  - `user_missing_permission`: the message that should be sent if the user that called the command doesn't have the
-    necessary rights to use this command
+    - `bad_argument`: the message that should be sent if a command is used with the wrong arguments. `%{command_usage}`
+      is
+      the command signature, `%{help_command}` is the help command to get help on this command
+    - `missing_argument`: the message that should be sent if a command is used with not enough arguments.
+      `%{command_usage}` is the command signature, `%{help_command}` is the help command to get help on this command
+    - `not_found`: the message that should be sent if a command is used with unknown arguments (ex: discord member that
+      doesn't exist)
+    - `exception`: the message that should be sent if a command raises an internal error. `%{file}` is the file where
+      the
+      error has been raised, `%{line}` is the line where the error has been raised, `%{command}` is the name of the
+      command, `%{error}` is the error type, `%{error_message}` is the error message
+    - `invite_message`: the message that should be used as a reason to justify the creation of an invitation to the
+      server where the bug as been raised
+    - `on_cooldown`: the message that should be sent if a command is used while it is on cooldown. `%{cooldown_time}` is
+      the cooldown duration in seconds
+    - `invalid_quoted_string`: the message that should be sent if a quoted string is badly or not closed
+    - `bot_missing_permission`: the message that should be sent if the bot doesn't have the necessary rights to execute
+      this command
+    - `user_missing_permission`: the message that should be sent if the user that called the command doesn't have the
+      necessary rights to use this command
 - `app_error`
-  - `transformer`: the message that should be sent if a transformer raises an error. `%{argument_value}` is the value
-    that has been passed to the transformer, `%{command_usage}` is the command signature, `%{help_command}` is the help
-    of the command
-  - `no_private_message`: the message that should be sent if a command is used in a private message and can't be used
-    in this context
-  - `missing_role`: the message that should be sent if a command is used by a user that doesn't have the necessary
-    role to use this command. `%{role}` is the name of the role
-  - `missing_any_role`: the message that should be sent if a command is used by a user that doesn't have any of the
-    necessary roles to use this command. `%{roles_list}` is the list of the roles
-  - `missing_permissions`: the message that should be sent if a command is used by a user that doesn't have the
-    necessary permissions to use this command. `%{permissions_list}` is the list of the permissions
-  - `bot_missing_permissions`: the message that should be sent if the bot doesn't have the necessary permissions to
-    execute this command. `%{permissions_list}` is the list of the permissions
-  - `cooldown`: the message that should be sent if a command is used while it is on cooldown. `%{cooldown_time}` is
-    the cooldown duration in seconds
-  - `command_not_found`: the message that should be sent if a command doesn't exist but is still cached and called by a
-    discord client
-
+    - `transformer`: the message that should be sent if a transformer raises an error. `%{argument_value}` is the value
+      that has been passed to the transformer, `%{command_usage}` is the command signature, `%{help_command}` is the
+      help
+      of the command
+    - `no_private_message`: the message that should be sent if a command is used in a private message and can't be used
+      in this context
+    - `missing_role`: the message that should be sent if a command is used by a user that doesn't have the necessary
+      role to use this command. `%{role}` is the name of the role
+    - `missing_any_role`: the message that should be sent if a command is used by a user that doesn't have any of the
+      necessary roles to use this command. `%{roles_list}` is the list of the roles
+    - `missing_permissions`: the message that should be sent if a command is used by a user that doesn't have the
+      necessary permissions to use this command. `%{permissions_list}` is the list of the permissions
+    - `bot_missing_permissions`: the message that should be sent if the bot doesn't have the necessary permissions to
+      execute this command. `%{permissions_list}` is the list of the permissions
+    - `cooldown`: the message that should be sent if a command is used while it is on cooldown. `%{cooldown_time}` is
+      the cooldown duration in seconds
+    - `command_not_found`: the message that should be sent if a command doesn't exist but is still cached and called by
+      a
+      discord client
 
 ## Links
 

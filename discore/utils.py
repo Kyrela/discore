@@ -144,15 +144,13 @@ def sformat(s, *args, **kwargs):
     return SparseFormatter().format(s, *args, **kwargs)
 
 
-config: addict.Dict = addict.Dict()
+config: addict.Dict = addict.Dict(loaded=False)
 
 
 def config_init(**kwargs):
     """
     Initialize the configuration
     """
-
-    global config
 
     env_file = kwargs.pop('env_file', '.env')
     if env_file:
@@ -162,6 +160,9 @@ def config_init(**kwargs):
 
     if "config.yml" in os.listdir() and os.path.isfile("config.yml"):
         config_files.append("config.yml")
+
+    if "override.config.yml" in os.listdir() and os.path.isfile("override.config.yml"):
+        config_files.append("override.config.yml")
 
     if 'configuration_file' in kwargs:
         kwargs_config = kwargs.pop('configuration_file')
@@ -178,11 +179,30 @@ def config_init(**kwargs):
             config_files.append(env_config)
 
     for config_file in config_files:
-        with open(config_file, 'r', encoding='utf-8') as f:
-            config.update(addict.Dict(yamlenv.load(f)))
+        with open(config_file, encoding='utf-8') as f:
+            load_config(yamlenv.load(f))
 
     if 'configuration' in kwargs:
-        config.update(addict.Dict(kwargs.pop('configuration')))
+        load_config(kwargs.pop('configuration'))
+
+    config.loaded = True
+
+
+def load_config(configuration: dict, recursion_key: str = "override_config"):
+    """
+    Load a configuration given a dictionary
+    """
+
+    global config
+
+    config.update(addict.Dict(configuration))
+
+    if not recursion_key or recursion_key not in config:
+        return
+
+    override = config.pop(recursion_key, None)
+    with open(override, encoding='utf-8') as f:
+        load_config(yamlenv.load(f))
 
 
 _ainsi = {
@@ -467,13 +487,14 @@ async def log_command_error(
     error_data = tb.extract_tb(err.__traceback__)[1]
     error_filename = path.basename(error_data.filename)
 
-    await fallback_reply(ctx_i, i18n.t(
-        "command_error.exception",
-        file=error_filename,
-        line=error_data.lineno,
-        command=error_data.name,
-        error=type(err).__name__,
-        error_message=err))
+    if config.log.alert_user:
+        await fallback_reply(ctx_i, i18n.t(
+            "command_error.exception",
+            file=error_filename,
+            line=error_data.lineno,
+            command=error_data.name,
+            error=type(err).__name__,
+            error_message=err))
 
     user = ctx_i.author if isinstance(ctx_i, commands.Context) else ctx_i.user
 
@@ -485,15 +506,6 @@ async def log_command_error(
     if isinstance(ctx_i, commands.Context):
         data["Original message"] = ctx_i.message.content
         data["Link to message"] = ctx_i.message.jump_url
-
-    if (config.log.create_invite
-            and ctx_i.channel.permissions_for(ctx_i.guild.me).create_instant_invite):
-        data["Invite"] = await ctx_i.channel.create_invite(
-            reason=i18n.t("command_error.invite_message"),
-            max_age=604800,
-            max_uses=1,
-            temporary=True,
-            unique=False)
 
     await log_data(
         bot,

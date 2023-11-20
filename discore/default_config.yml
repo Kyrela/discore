@@ -3,13 +3,13 @@ hot_reload: true
 locale: "en-US"
 case_insensitive: true
 log:
+  alert_user: true
   stream: true
   level: "INFO"
   root: true
   stream_to_err: true
   format: "[{asctime}] {levelformat} {name}: {message}"
   date_format: "%Y-%m-%d %H:%M:%S"
-  create_invite: false
   level_format:
     debug: "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
     info: "[{blue}{bold}INFO{no_bold}{normal}]    "
