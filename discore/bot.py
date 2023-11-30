@@ -34,7 +34,7 @@ class NoSpecifiedTokenError(Exception):
     pass
 
 
-class Bot(commands.Bot):
+class Bot(commands.AutoShardedBot):
     """
     The class representing the Discord bot
     """
