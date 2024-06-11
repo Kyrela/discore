@@ -451,7 +451,11 @@ class Bot(commands.AutoShardedBot):
             f"{command.qualified_name!r} app command succeeded for "
             f"{str(i.user)!r} ({i.user.id!r})"]
 
-        rep: discord.InteractionMessage = await i.original_response()
+        try:
+            rep: discord.InteractionMessage = await i.original_response()
+        except discord.NotFound:
+            _log.info(", ".join(message_log_infos))
+            return
         message_log_infos.append("with a response")
         if rep.clean_content:
             short_content = sanitize(rep.clean_content, 120)

@@ -200,7 +200,7 @@ def load_config(configuration: dict, recursion_key: str = "override_config"):
     if not recursion_key or recursion_key not in config:
         return
 
-    override = config.pop(recursion_key, None)
+    override = config.pop(recursion_key)
     with open(override, encoding='utf-8') as f:
         load_config(yamlenv.load(f))
 
