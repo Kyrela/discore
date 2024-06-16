@@ -38,3 +38,12 @@ app_error:
   bot_missing_permissions: "J'ai besoin des permissions suivantes pour utiliser cette commande: `%{permissions_list}`."
   on_cooldown: "Cette commande est en cooldown. Réessayez %{cooldown_time}."
   command_not_found: "Cette commande non trouvée, merci de relancer votre client discord."
+
+footer:
+  version: "ver. %{version}"
+  timeout: "suppression dans %{delay}"
+  units:
+    seconds: "s"
+    minutes: "m"
+    hours: "h"
+    days: "j"

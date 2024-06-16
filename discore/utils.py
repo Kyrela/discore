@@ -1,11 +1,11 @@
 import string
-from typing import Union
+from typing import Union, Optional, Iterable
 import yamlenv
 import addict
 import i18n
 from os import path
 import os
-from datetime import datetime
+import datetime as dt
 import sys
 import traceback as tb
 from dotenv import load_dotenv
@@ -536,7 +536,7 @@ async def log_data(
         exc_info = sys.exc_info()
 
     traceback = message
-    data["Date"] = datetime.today().strftime(config.log.date_format)
+    data["Date"] = dt.datetime.today().strftime(config.log.date_format)
 
     if exc_info:
         err_type, err_value, err_traceback = exc_info
@@ -582,19 +582,46 @@ async def log_data(
 
 
 def set_embed_footer(
-        bot: discord.Client, embed: discord.Embed, set_color: bool = True) -> None:
+        bot: discord.Client,
+        embed: discord.Embed,
+        timeout: Optional[float] = None,
+        sup: Iterable[str] = (),
+        set_color: bool = True
+) -> None:
     """
     Sets the footer of an embed to the bot's name, avatar, color and version
 
     :param bot: The bot instance
     :param embed: The embed to set the footer of
+    :param timeout: The timeout of the message (delete_after) in seconds, if any
+    :param sup: The list of strings to add to the footer
     :param set_color: Whether to set the color of the embed to the bot's color or not
     :return: None
     """
 
+    info = [bot.user.name]
+
+    if config.version:
+        info.append(i18n.t('footer.version', version=config.version))
+    info.extend(sup)
+    if timeout:
+        relative = filter(
+            lambda i: i[1] > 0,
+            {
+                'days': int(timeout // 86400),
+                'hours': int(timeout // 3600) % 24,
+                'minutes': int(timeout // 60) % 60,
+                'seconds': int(timeout % 60),
+            }.items())
+
+        delay = " ".join(
+            str(value) + i18n.t(f'footer.units.{unit}')
+            for unit, value in relative)
+
+        info.append(i18n.t('footer.timeout', delay=delay))
+
     embed.set_footer(
-        text=bot.user.name + (
-            f" | ver. {config.version}" if config.version else ""),
+        text=" | ".join(info),
         icon_url=bot.user.display_avatar.url
     )
     if set_color and (embed.colour is None) and config.color:
