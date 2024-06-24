@@ -379,7 +379,9 @@ async def fallback_reply(
         destination: Union[
             commands.Context, discord.Interaction, discord.TextChannel,
             discord.VoiceChannel, discord.Thread, discord.DMChannel,
-            discord.PartialMessageable, discord.GroupChannel],
+            discord.PartialMessageable, discord.GroupChannel,
+            discord.Message,
+        ],
         *args, **kwargs):
     """
     Try to reply to a message, if it fails, send it as a normal message
