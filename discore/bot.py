@@ -399,7 +399,7 @@ class Bot(commands.AutoShardedBot):
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
                 f"On cooldown")
-        elif isinstance(error, commands.InvalidEndOfQuotedStringError):
+        elif isinstance(error, (commands.InvalidEndOfQuotedStringError, commands.ExpectedClosingQuoteError)):
             await fallback_reply(ctx, t("command_error.invalid_quoted_string"))
             _log.warning(
                 f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
