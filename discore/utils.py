@@ -542,7 +542,7 @@ async def log_data(
 
     if exc_info:
         err_type, err_value, err_traceback = exc_info
-        tb_infos = tb.extract_tb(err_traceback)[1]
+        tb_infos = tb.extract_tb(err_traceback)[-1]
         unenclosed_tb = (
                 "".join(tb.format_tb(err_traceback))
                 + "".join(tb.format_exception_only(err_type, err_value)))
