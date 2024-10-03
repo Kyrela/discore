@@ -59,6 +59,16 @@ class Bot(commands.AutoShardedBot):
             pass
         _log.info(f"Bot initialising... discore v{discore_version}, discord.py v{version('discord.py')}")
 
+        if config.log.commands:
+            if not hasattr(self, 'on_command'):
+                self.on_command = self.log_command_request
+            if not hasattr(self, 'on_command_completion'):
+                self.on_command_completion = self.log_command_completion
+            if not hasattr(self, 'on_app_command'):
+                self.on_app_command = self.log_app_command_request
+            if not hasattr(self, 'on_app_command_completion'):
+                self.on_app_command_completion = self.log_app_command_completion
+
         super().__init__(
             command_prefix=command_prefix or config.prefix,
             description=kwargs.pop('description', config.description) or None,
@@ -283,17 +293,34 @@ class Bot(commands.AutoShardedBot):
         ctx.command = self.all_commands.get(invoker.lower() if config.case_insensitive else invoker)
         return ctx
 
-    async def on_command(self, ctx: commands.Context):
-        if ctx.interaction:
+    async def log_command_request(self, ctx: commands.Context):
+        """
+        Logs the command request
+
+        :param ctx: The context of the command
+        :return: None
+
+        .. deprecated:: 0.4
+        """
+
+        if ctx.interaction or not config.log.commands:
             return
 
         _log.info(
             f"{ctx.command.name!r} command request sent by {str(ctx.author)!r} "
             f"({ctx.author.id!r}) with invocation {ctx.message.content!r}")
 
-    async def on_command_completion(self, ctx: commands.Context):
+    async def log_command_completion(self, ctx: commands.Context):
+        """
+        Logs the command completion
 
-        if ctx.interaction:
+        :param ctx: The context of the command
+        :return: None
+
+        .. deprecated:: 0.4
+        """
+
+        if ctx.interaction or not config.log.commands:
             return
 
         rep = None
@@ -329,7 +356,6 @@ class Bot(commands.AutoShardedBot):
         _log.info(", ".join(message_log_infos))
 
     async def on_command_error(self, ctx, error: Exception):
-
         if self.extra_events.get('on_command_error', None):
             return
 
@@ -433,7 +459,7 @@ class Bot(commands.AutoShardedBot):
             logger=_log
         )
 
-    async def on_app_command_completion(
+    async def log_app_command_completion(
             self, i: discord.Interaction, command: discord.app_commands.Command) -> None:
         """
         Logs the completion of an app command
@@ -441,7 +467,12 @@ class Bot(commands.AutoShardedBot):
         :param i: The interaction
         :param command: The command that was completed
         :return: None
+
+        .. deprecated:: 0.4
         """
+
+        if not config.log.commands:
+            return
 
         message_log_infos = [
             f"{command.qualified_name!r} app command succeeded for "
@@ -470,8 +501,21 @@ class Bot(commands.AutoShardedBot):
 
         _log.info(", ".join(message_log_infos))
 
-    async def on_app_command(
+    async def log_app_command_request(
             self, i: discord.Interaction, command: discord.app_commands.Command) -> None:
+        """
+        Logs the app command request
+
+        :param i: The interaction of the command
+        :param command: The command
+        :return: None
+
+        .. deprecated:: 0.4
+        """
+
+        if not config.log.commands:
+            return
+
         args = await i.command._transform_arguments(i, i._cs_namespace)
         _log.info(
             f"{i.command.name!r} app command request sent by {str(i.user)!r} "

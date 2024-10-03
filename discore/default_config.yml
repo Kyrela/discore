@@ -4,6 +4,7 @@ locale: "en-US"
 case_insensitive: true
 log:
   alert_user: true
+  commands: false
   stream: true
   level: "INFO"
   root: true

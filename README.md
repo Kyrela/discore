@@ -11,7 +11,7 @@ A core for initialise, run and tracks errors of discord.py bots, with a "Convent
 - better default help hybrid command
 - All information stored in a configuration file
 - Automatic error handling and responses
-- Automatic logs storage for each command called, completed and failed
+- Automatic logging for each command failed
 - localisation automatic detection and support
 - Multiple environment support
 - Backwards compatibility with discord.py
@@ -82,12 +82,13 @@ log:
   channel: 1111111111111
   file: "log.txt"
   alert_user: true
+  commands: false
   stream: true
   level: "INFO"
   root: true
   stream_to_err: true
   format: "[{asctime}] {levelformat} {name}: {message}"
-  date_format: "%d/%m/%Y %H:%M:%S"
+  date_format: "%Y-%m-%d %H:%M:%S"
   level_format:
     debug: "[{bg_black}{bold}DEBUG{no_bold}{bg_normal}]   "
     info: "[{blue}{bold}INFO{no_bold}{normal}]    "
@@ -207,6 +208,8 @@ app_error:
     - `file`: the file where the information and errors should be logged, if any
     - `alert_user`: whether the bot should send a message to the user that called the command if a code-related error
       occurred
+    - `commands`: (deprecated) whether the commands (reception/completion) should be logged. This doesn't affect 
+      command errors, which are always logged
     - `stream`: whether the logs should be streamed to the console or not
     - `level`: the level of logs to be displayed in the console. Can be one
       of `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
