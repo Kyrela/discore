@@ -144,7 +144,7 @@ class CommandTree(app_commands.CommandTree):
                 await command._invoke_autocomplete(interaction, focused, namespace)
             except Exception:
                 # Suppress exception since it can't be handled anyway.
-                pass
+                _log.exception('Ignoring exception in autocomplete for %r', command.qualified_name)
 
             return
 
