@@ -12,7 +12,7 @@ from discord import app_commands
 from discord._types import ClientT
 from discord.app_commands import Namespace, AppCommandError
 
-from .utils import get_app_command_usage, log_command_error, set_locale
+from .utils import get_app_command_usage, log_command_error, set_locale, config
 
 __all__ = ('CommandTree',)
 
@@ -64,6 +64,7 @@ class CommandTree(app_commands.CommandTree):
         """
 
         command = interaction.command
+        logged = False
 
         if isinstance(error, app_commands.TransformerError):
             await interaction.response.send_message(t(
@@ -99,13 +100,21 @@ class CommandTree(app_commands.CommandTree):
             await interaction.response.send_message(
                 t('app_error.command_not_found'), ephemeral=True)
         elif isinstance(error, app_commands.CommandInvokeError):
+            logged = True
             await log_command_error(self.client, interaction, error.original, logger=_log)
         else:
+            logged = True
             _log.error(
-                f"Unhandled command error{' on command ' + command.qualified_name if command else ''}\n"
+                f"{command.qualified_name!r} command failed for {str(interaction.user)!r} ({interaction.user.id!r}): "
+                f"Unhandled command error\ninteraction:\n"
                 + "\n".join(f'\t{attr!r}: {interaction.__getattribute__(attr)!r}' for attr in interaction.__slots__
                             if attr[0] != '_'),
                 exc_info=error)
+
+        if (not logged) and config.log.commands:
+            _log.info(
+                f"{command.qualified_name!r} command cancelled for {str(interaction.user)!r} ({interaction.user.id!r}): "
+                + str(error))
 
     async def _call(self, interaction: Interaction[ClientT]) -> None:
         if not await self.interaction_check(interaction):

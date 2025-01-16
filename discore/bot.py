@@ -379,73 +379,55 @@ class Bot(commands.AutoShardedBot):
 
         if isinstance(error, commands.HybridCommandError):
             error = error.original
+        logged = False
 
         if isinstance(error, (commands.ConversionError, commands.BadArgument)):
             await fallback_reply(ctx, t(
                 "command_error.bad_argument",
                 command_usage=get_command_usage(self.command_prefix, ctx.command),
                 help_command=self.command_prefix + "help " + ctx.command.name))
-            _log.warning(
-                f"{ctx.command.name!r} command failed for"
-                f" {str(ctx.author)!r} ({ctx.author.id!r}): "
-                f"Bad arguments given")
         elif isinstance(error, commands.MissingRequiredArgument):
             await fallback_reply(ctx, t(
                 "command_error.missing_argument",
                 command_usage=get_command_usage(self.command_prefix, ctx.command),
                 help_command=self.command_prefix + "help " + ctx.command.name))
-            _log.warning(
-                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
-                f"Missing required argument")
         elif (isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.Forbidden)) or \
                 isinstance(error, commands.BotMissingPermissions):
             await fallback_reply(ctx, t("command_error.bot_missing_permission"))
-            _log.warning(
-                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
-                f"Bot is missing permissions")
         elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, discord.NotFound):
             await fallback_reply(ctx, t("command_error.not_found"))
-            _log.warning(
-                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
-                f"No matches for the request")
         elif isinstance(error, (commands.NotOwner, commands.MissingPermissions)):
             await fallback_reply(ctx, t("command_error.user_missing_permission"))
-            _log.warning(
-                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
-                f"User is missing permissions")
         elif isinstance(error, commands.CommandOnCooldown):
             await fallback_reply(
                 ctx, t(
                     "command_error.on_cooldown",
                     cooldown_time="<t:" + str(int(time.time() + error.retry_after)) + ":R>"))
-            _log.warning(
-                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
-                f"On cooldown")
         elif isinstance(error, (commands.InvalidEndOfQuotedStringError, commands.ExpectedClosingQuoteError)):
             await fallback_reply(ctx, t("command_error.invalid_quoted_string"))
-            _log.warning(
-                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
-                f"Invalid quoted string")
         elif isinstance(error, commands.PrivateMessageOnly):
             await fallback_reply(ctx, t("command_error.private_message_only"))
-            _log.warning(
-                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
-                f"Private message only")
         elif isinstance(error, commands.NoPrivateMessage):
             await fallback_reply(ctx, t("command_error.no_private_message"))
-            _log.warning(
-                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
-                f"No private message")
         elif isinstance(error, commands.CommandNotFound):
             return
         elif (isinstance(error, commands.CommandInvokeError)
               or isinstance(error, discord.app_commands.CommandInvokeError)):
+            logged = True
             await log_command_error(self, ctx, error.original, logger=_log)
         else:
+            logged = True
             _log.error(
-                f"Unhandled command error{' on command ' + ctx.command.name if ctx.command else ''}\n"
+                f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
+                f"Unhandled command error\nctx:\n"
                 + "\n".join(f'\t{key!r}: {value!r}' for key, value in ctx.__dict__.items()),
                 exc_info=error)
+
+        if (not logged) and config.log.commands:
+            _log.info(
+                f"{ctx.command.name!r} command cancelled for {str(ctx.author)!r} ({ctx.author.id!r}): "
+                + str(error))
+
 
     async def on_error(self, event, *args, **kwargs):
         await log_data(
