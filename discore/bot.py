@@ -383,6 +383,9 @@ class Bot(commands.AutoShardedBot):
             error = error.original
         logged = False
 
+        if isinstance(error, commands.CommandNotFound):
+            return
+
         cd = ctx.command.cooldown
         if not isinstance(error, commands.CommandOnCooldown) and cd and cd._window == cd._last:
             cd.reset()
@@ -415,8 +418,6 @@ class Bot(commands.AutoShardedBot):
             await fallback_reply(ctx, t("command_error.private_message_only"))
         elif isinstance(error, commands.NoPrivateMessage):
             await fallback_reply(ctx, t("command_error.no_private_message"))
-        elif isinstance(error, commands.CommandNotFound):
-            return
         elif isinstance(error, commands.CommandInvokeError) and (
             isinstance(error.original, ServerDisconnectedError)
             or isinstance(error.original, discord.DiscordServerError)

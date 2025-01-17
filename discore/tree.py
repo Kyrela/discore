@@ -69,6 +69,12 @@ class CommandTree(app_commands.CommandTree):
         command = interaction.command
         logged = False
 
+        if isinstance(error, app_commands.CommandNotFound):
+            await self.sync(guild=interaction.guild)
+            await interaction.response.send_message(
+                t('app_error.command_not_found'), ephemeral=True)
+            return
+
         if not isinstance(error, app_commands.CommandOnCooldown):
             cd_checks: List[Callable] = [
                 c for c in command.checks
@@ -108,10 +114,6 @@ class CommandTree(app_commands.CommandTree):
             await interaction.response.send_message(t(
                 'app_error.on_cooldown',
                 cooldown_time="<t:" + str(int(time.time() + error.retry_after)) + ":R>", ephemeral=True))
-        elif isinstance(error, app_commands.CommandNotFound):
-            await self.sync(guild=interaction.guild)
-            await interaction.response.send_message(
-                t('app_error.command_not_found'), ephemeral=True)
         elif isinstance(error, app_commands.CommandInvokeError) and (
             isinstance(error.original, ServerDisconnectedError)
             or isinstance(error.original, DiscordServerError)
