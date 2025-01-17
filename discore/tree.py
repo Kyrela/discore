@@ -4,7 +4,9 @@ The class that represent the bot's command tree
 
 import logging
 import time
+from typing import List, Callable
 
+import discord.app_commands
 from i18n import t
 
 from discord import *
@@ -65,6 +67,16 @@ class CommandTree(app_commands.CommandTree):
 
         command = interaction.command
         logged = False
+
+        if not isinstance(error, app_commands.CommandOnCooldown):
+            cd_checks: List[Callable] = [
+                c for c in command.checks
+                if c.__qualname__ == '_create_cooldown_decorator.<locals>.predicate'
+            ]
+            for c in cd_checks:
+                cd: discord.app_commands.Cooldown = await c.__closure__[0].cell_contents(interaction)
+                if cd and cd._window == cd._last:
+                    cd.reset()
 
         if isinstance(error, app_commands.TransformerError):
             await interaction.response.send_message(t(

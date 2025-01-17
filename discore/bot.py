@@ -381,6 +381,10 @@ class Bot(commands.AutoShardedBot):
             error = error.original
         logged = False
 
+        cd = ctx.command.cooldown
+        if not isinstance(error, commands.CommandOnCooldown) and cd and cd._window == cd._last:
+            cd.reset()
+
         if isinstance(error, (commands.ConversionError, commands.BadArgument)):
             await fallback_reply(ctx, t(
                 "command_error.bad_argument",
