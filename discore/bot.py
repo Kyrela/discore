@@ -11,6 +11,8 @@ import logging
 import datetime
 from importlib.metadata import version
 from typing import Union, Type, Any
+
+from aiohttp import ServerDisconnectedError, ClientOSError
 from i18n import t
 
 from discord.ext import commands
@@ -415,6 +417,17 @@ class Bot(commands.AutoShardedBot):
             await fallback_reply(ctx, t("command_error.no_private_message"))
         elif isinstance(error, commands.CommandNotFound):
             return
+        elif isinstance(error, commands.CommandInvokeError) and (
+            isinstance(error.original, ServerDisconnectedError)
+            or isinstance(error.original, discord.DiscordServerError)
+            or isinstance(error.original, ClientOSError)
+        ):
+            logged = True
+            if config.log.commands:
+                _log.warning(
+                    f"{ctx.command.name!r} command failed for {str(ctx.author)!r} ({ctx.author.id!r}): "
+                    + str(error.original)
+                )
         elif (isinstance(error, commands.CommandInvokeError)
               or isinstance(error, discord.app_commands.CommandInvokeError)):
             logged = True

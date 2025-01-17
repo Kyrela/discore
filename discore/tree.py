@@ -7,6 +7,7 @@ import time
 from typing import List, Callable
 
 import discord.app_commands
+from aiohttp import ServerDisconnectedError, ClientOSError
 from i18n import t
 
 from discord import *
@@ -111,6 +112,17 @@ class CommandTree(app_commands.CommandTree):
             await self.sync(guild=interaction.guild)
             await interaction.response.send_message(
                 t('app_error.command_not_found'), ephemeral=True)
+        elif isinstance(error, app_commands.CommandInvokeError) and (
+            isinstance(error.original, ServerDisconnectedError)
+            or isinstance(error.original, DiscordServerError)
+            or isinstance(error.original, ClientOSError)
+        ):
+            logged = True
+            if config.log.commands:
+                _log.warning(
+                    f"{command.qualified_name!r} command failed for {str(interaction.user)!r} ({interaction.user.id!r}): "
+                    + str(error.original)
+                )
         elif isinstance(error, app_commands.CommandInvokeError):
             logged = True
             await log_command_error(self.client, interaction, error.original, logger=_log)
