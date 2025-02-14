@@ -18,6 +18,7 @@ from i18n import t
 from discord.ext import commands
 import discord
 
+from . import ignore_cd
 from .help import EmbedHelpCommand
 from .tree import CommandTree
 from .utils import (config, config_init, logging_init, i18n_init, set_locale, sanitize,
@@ -386,9 +387,8 @@ class Bot(commands.AutoShardedBot):
         if isinstance(error, commands.CommandNotFound):
             return
 
-        cd = ctx.command.cooldown
-        if not isinstance(error, commands.CommandOnCooldown) and cd and cd._window == cd._last:
-            cd.reset()
+        if not isinstance(error, commands.CommandOnCooldown):
+            await ignore_cd(ctx)
 
         if isinstance(error, (commands.ConversionError, commands.BadArgument)):
             await fallback_reply(ctx, t(

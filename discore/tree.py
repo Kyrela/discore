@@ -15,6 +15,7 @@ from discord import app_commands
 from discord._types import ClientT
 from discord.app_commands import Namespace, AppCommandError
 
+from . import ignore_cd
 from .utils import get_app_command_usage, log_command_error, set_locale, config
 
 __all__ = ('CommandTree',)
@@ -76,14 +77,7 @@ class CommandTree(app_commands.CommandTree):
             return
 
         if not isinstance(error, app_commands.CommandOnCooldown):
-            cd_checks: List[Callable] = [
-                c for c in command.checks
-                if c.__qualname__ == '_create_cooldown_decorator.<locals>.predicate'
-            ]
-            for c in cd_checks:
-                cd: discord.app_commands.Cooldown = await c.__closure__[0].cell_contents(interaction)
-                if cd and cd._window == cd._last:
-                    cd.reset()
+            await ignore_cd(interaction)
 
         if isinstance(error, app_commands.TransformerError):
             await interaction.response.send_message(t(

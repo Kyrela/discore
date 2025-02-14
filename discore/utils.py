@@ -1,5 +1,5 @@
 import string
-from typing import Union, Optional, Iterable
+from typing import Union, Optional, Iterable, List, Callable
 import yamlenv
 import addict
 import i18n
@@ -32,6 +32,7 @@ __all__ = (
     'log_data',
     'set_embed_footer',
     'CaseInsensitiveStringView',
+    'ignore_cd',
 ) + discord.utils.__all__
 
 class SparseFormatter(string.Formatter):
@@ -628,6 +629,36 @@ def set_embed_footer(
     )
     if set_color and (embed.colour is None) and config.color:
         embed.colour = config.color
+
+
+async def ignore_cd(ci: commands.Context | discord.Interaction):
+    """
+    Reset the cooldown of a command if not already triggered by another call
+
+    :param ci: The context or interaction of the command
+    :return: None
+    """
+
+    if isinstance(ci, commands.Context):
+        buckets = ci.command._buckets
+        if buckets:
+            cd = buckets.get_bucket(ci)
+        else:
+            cd = ci.command.cooldown
+        if cd and cd._window == cd._last:
+            cd.reset()
+        return
+    if isinstance(ci, discord.Interaction):
+        cd_checks: List[Callable] = [
+            c for c in ci.command.checks
+            if c.__qualname__ == '_create_cooldown_decorator.<locals>.predicate'
+        ]
+        for c in cd_checks:
+            cd: discord.app_commands.Cooldown = await c.__closure__[0].cell_contents(ci)
+            if cd and cd._window == cd._last:
+                cd.reset()
+        return
+    raise TypeError(f"Expected a Context or Interaction, got {type(ci)}")
 
 
 class CaseInsensitiveStringView(commands.bot.StringView):
