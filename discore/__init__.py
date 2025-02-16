@@ -10,7 +10,7 @@ from discord.ext.commands import *
 from discord.ext.tasks import *
 
 from .utils import *
-from .bot import Bot
+from .bot import Bot, get_bot
 from .cog import Cog
 
 __version__ = "0.3"

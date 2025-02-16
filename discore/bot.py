@@ -10,7 +10,7 @@ from os import path
 import logging
 import datetime
 from importlib.metadata import version
-from typing import Union, Type, Any
+from typing import Union, Type, Any, Optional, Self
 
 from aiohttp import ServerDisconnectedError, ClientOSError
 from i18n import t
@@ -25,16 +25,18 @@ from .utils import (config, config_init, logging_init, i18n_init, set_locale, sa
                     fallback_reply, get_command_usage, log_command_error, log_data,
                     CaseInsensitiveStringView as StringView)
 
-__all__ = ('Bot',)
+__all__ = ('Bot', 'get_bot')
 
 _log = logging.getLogger(__name__)
-
 
 class NoSpecifiedTokenError(Exception):
     """
     a basic custom error, in case no token is specified
     """
     pass
+
+
+_bot = None
 
 
 class Bot(commands.AutoShardedBot):
@@ -100,7 +102,7 @@ class Bot(commands.AutoShardedBot):
 
                 cog_name = file[:-3].title()
                 cog_class = getattr(__import__('cogs.' + cog_name.lower(), fromlist=[cog_name]), cog_name)
-                new_cog = cog_class(self)
+                new_cog = cog_class()
                 await self.add_cog(new_cog)
 
                 if help_cog_name == cog_name:
@@ -126,6 +128,10 @@ class Bot(commands.AutoShardedBot):
         if not token:
             raise NoSpecifiedTokenError(
                 "No token is specified in the configuration file nor in the run method")
+
+        global _bot
+        if not _bot:
+            _bot = self
 
         super().run(
             token,
@@ -520,3 +526,22 @@ class Bot(commands.AutoShardedBot):
         _log.info(
             f"{i.command.name!r} app command request sent by {str(i.user)!r} "
             f"({i.user.id!r}) with invocation \"{args!r}\"")
+
+    @classmethod
+    def get(cls) -> Self:
+        """
+        Returns the bot instance currently running
+
+        :return: The bot instance currently running
+        """
+        return _bot
+
+
+def get_bot() -> Optional[Bot]:
+    """
+    Returns the bot
+
+    :return: The bot
+    """
+
+    return _bot
