@@ -63,6 +63,7 @@ description: "A basic test bot"
 version: "1.0"
 color: 0x35901E
 hot_reload: true
+auto_sync: true
 case_insensitive: true
 locale: "en-US"
 
@@ -188,6 +189,7 @@ app_error:
 - `help_cog`: the name of the cog containing the help command. If not provided, no cog will be assigned.
 - `hot_reload`: whether or not the bot should reload the cogs when they are modified. Also describe if
   localisations should be loaded from memory or from the disk.
+- `auto_sync`: whether or not the bot should automatically sync the slash commands at startup (avoid if possible)
 - `case_insensitive`: whether the prefix and the commands should be case insensitive (e.g. `!ping` and `!PING` are
   equivalent)
 - `locale`: The default locale of the bot, if none is found at the command's call

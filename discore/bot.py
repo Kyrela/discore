@@ -139,6 +139,18 @@ class Bot(commands.AutoShardedBot):
             **kwargs
         )
 
+    async def start(self, token: str, *, reconnect: bool = True) -> None:
+        await self.login(token)
+        if self.application_id and config.auto_sync:
+            sync_res = await self.tree.sync()
+            if sync_res is None:
+                _log.error("Failed to sync the tree")
+            elif sync_res:
+                _log.info(f"Slash commands successfully synced: {', '.join([repr(c.name) for c in sync_res])}")
+            else:
+                _log.info("No slash commands to sync")
+        await self.connect(reconnect=reconnect)
+
     def __enter__(self):
         return self
 
@@ -153,14 +165,6 @@ class Bot(commands.AutoShardedBot):
 
     async def on_ready(self):
         self.start_time = datetime.datetime.now()
-        if self.application_id:
-            sync_res = await self.tree.sync()
-            if sync_res is None:
-                _log.error("Failed to sync the tree")
-            elif sync_res:
-                _log.info(f"Slash commands successfully synced: {', '.join([repr(c.name) for c in sync_res])}")
-            else:
-                _log.info("No slash commands to sync")
         _log.info(f"Bot launched in {(self.start_time - self.initialisation_time).total_seconds():.3f}s,"
                   f" ready to use (prefix {self.command_prefix!r})")
 

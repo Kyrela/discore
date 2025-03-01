@@ -1,5 +1,6 @@
 prefix: "!"
 hot_reload: true
+auto_sync: true
 locale: "en-US"
 case_insensitive: true
 log:
