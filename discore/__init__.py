@@ -13,9 +13,9 @@ from .utils import *
 from .bot import Bot, get_bot
 from .cog import Cog
 
-__version__ = "0.6"
-__version_info__ = (0, 6)
-__copyright__ = "Copyright 2022-2023"
+__version__ = "0.7"
+__version_info__ = (0, 7)
+__copyright__ = "Copyright 2022-2025"
 __author__ = "Kyrela"
 __license__ = "MIT"
 __name__ = "Discore"
