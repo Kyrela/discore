@@ -33,6 +33,7 @@ __all__ = (
     'set_embed_footer',
     'CaseInsensitiveStringView',
     'ignore_cd',
+    'snake_to_pascale',
 ) + discord.utils.__all__
 
 class SparseFormatter(string.Formatter):
@@ -673,3 +674,10 @@ class CaseInsensitiveStringView(commands.bot.StringView):
             self.index += strlen
             return True
         return False
+
+
+def snake_to_pascale(s: str) -> str:
+    """
+    Convert a snake_case string to PascalCase
+    """
+    return ''.join(word.capitalize() for word in s.split('_'))

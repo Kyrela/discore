@@ -23,7 +23,7 @@ from .help import EmbedHelpCommand
 from .tree import CommandTree
 from .utils import (config, config_init, logging_init, i18n_init, set_locale, sanitize,
                     fallback_reply, get_command_usage, log_command_error, log_data,
-                    CaseInsensitiveStringView as StringView)
+                    CaseInsensitiveStringView as StringView, snake_to_pascale)
 
 __all__ = ('Bot', 'get_bot')
 
@@ -100,8 +100,9 @@ class Bot(commands.AutoShardedBot):
                 if not file.endswith(".py"):
                     continue
 
-                cog_name = file[:-3].title()
-                cog_class = getattr(__import__('cogs.' + cog_name.lower(), fromlist=[cog_name]), cog_name)
+                file_name = file[:-3]
+                cog_name = snake_to_pascale(file_name)
+                cog_class = getattr(__import__('cogs.' + file_name, fromlist=[cog_name]), cog_name)
                 new_cog = cog_class()
                 await self.add_cog(new_cog)
 
