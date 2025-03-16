@@ -141,6 +141,7 @@ class Bot(commands.AutoShardedBot):
 
     async def start(self, token: str, *, reconnect: bool = True) -> None:
         await self.login(token)
+        self.dispatch('login')
         if self.application_id and config.auto_sync:
             sync_res = await self.tree.sync()
             if sync_res is None:
