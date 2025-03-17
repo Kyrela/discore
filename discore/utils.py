@@ -156,6 +156,9 @@ def config_init(**kwargs):
     Initialize the configuration
     """
 
+    if config.loaded:
+        return
+
     env_file = kwargs.pop('env_file', '.env')
     if env_file:
         load_dotenv(dotenv_path=env_file)
