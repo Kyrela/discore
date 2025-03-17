@@ -36,6 +36,8 @@ __all__ = (
     'snake_to_pascale',
 ) + discord.utils.__all__
 
+logging_initialized = False
+
 class SparseFormatter(string.Formatter):
     """
     A modified string formatter that handles a sparse set of format
@@ -308,6 +310,13 @@ def logging_init(**kwargs) -> None:
 
     :return: None
     """
+    global logging_initialized
+
+    if logging_initialized:
+        return
+
+    logging_initialized = True
+
     log_level = kwargs.pop("log_level", config.log.level)
     given_formatter = kwargs.pop("formatter", None)
 
