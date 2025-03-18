@@ -5,6 +5,7 @@ The class representing the Discord bot
 import asyncio
 import importlib
 import os
+import sys
 import time
 from os import path
 import logging
@@ -460,6 +461,14 @@ class Bot(commands.AutoShardedBot):
 
 
     async def on_error(self, event, *args, **kwargs):
+        err_type, err_value, err_traceback = sys.exc_info()
+        if (
+            isinstance(err_value, ServerDisconnectedError)
+            or isinstance(err_value, discord.DiscordServerError)
+            or isinstance(err_value, ClientOSError)
+        ):
+            _log.warning(f"{event!r} event failed: {err_value!r}")
+            return
         await log_data(
             self,
             "Error raised",
