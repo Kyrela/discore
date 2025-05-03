@@ -13,8 +13,8 @@ from .utils import *
 from .bot import Bot, get_bot
 from .cog import Cog
 
-__version__ = "0.9"
-__version_info__ = (0, 9)
+__version__ = "0.10"
+__version_info__ = (0, 10)
 __copyright__ = "Copyright 2022-2025"
 __author__ = "Kyrela"
 __license__ = "MIT"

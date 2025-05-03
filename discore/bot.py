@@ -84,8 +84,6 @@ class Bot(commands.AutoShardedBot):
             **kwargs
         )
 
-        asyncio.run(self._load_cogs())
-
     async def _load_cogs(self):
         """
         loads dynamically the cogs found in the /cog folder and the log cog
@@ -142,6 +140,7 @@ class Bot(commands.AutoShardedBot):
         )
 
     async def start(self, token: str, *, reconnect: bool = True) -> None:
+        await self._load_cogs()
         await self.login(token)
         self.dispatch('login')
         if self.application_id and config.auto_sync:
