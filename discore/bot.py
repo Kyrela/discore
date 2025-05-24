@@ -444,7 +444,7 @@ class Bot(commands.AutoShardedBot):
         elif (isinstance(error, commands.CommandInvokeError)
               or isinstance(error, discord.app_commands.CommandInvokeError)):
             logged = True
-            await log_command_error(self, ctx, error.original, logger=_log)
+            await log_command_error(ctx, error.original, logger=_log)
         else:
             logged = True
             _log.error(

@@ -157,10 +157,9 @@ command_error:
   bad_argument: "One or more arguments are incorrect.\nTry \n```\n%{command_usage}\n```\nFor more information on usage, send\n```\n%{help_command}\n```"
   missing_argument: "One or more arguments are missing.\nTry \n```\n%{command_usage}\n```\nFor more information on usage, send\n```\n%{help_command}\n```"
   not_found: "Sorry, I couldn't find anything that matched what you indicated."
-  exception: "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```\nFile '%{file}', line '%{line}', command '%{command}'\n%{error}: %{error_message}\n```"
   invite_message: "A bug has occurred. This invitation will allow, if needed, the developer to access the server, to understand why the bug occurred. This invitation is limited to one use, grants only the status of temporary member, and lasts maximum 1 day."
   on_cooldown: "This command is on cooldown. Try again %{cooldown_time}."
-  invalid_quoted_string: "Sorry, but I couldn't correctly process the arguments. Maybe you forgot to put a space after a closing quote ?"
+  invalid_quoted_string: "Sorry, but I couldn't correctly process the arguments. Maybe you forgot to close a quote or to put a space after a closing quote?"
   bot_missing_permission: "I do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
   user_missing_permission: "You do not have the necessary permissions to perform this action (role not high enough or permission not granted)"
   private_message_only: "This command can only be used in private messages."
@@ -175,6 +174,17 @@ app_error:
   bot_missing_permissions: "I need the following permissions to use this command: `%{permissions_list}`."
   on_cooldown: "This command is on cooldown. Try again %{cooldown_time}."
   command_not_found: "Command not found, please refresh your discord client."
+
+exception: "An exceptional error has occurred. The bug has been automatically reported, please be patient. Detail of the error :```\nFile '%{file}', line '%{line}', function '%{function}'\n%{error}: %{error_message}\n```"
+
+footer:
+  version: "ver. %{version}"
+  timeout: "deletion in %{delay}"
+  units:
+    seconds: "s"
+    minutes: "m"
+    hours: "h"
+    days: "d"
 ```
 
 > The localisations provided here are the default one, and are used if they're not provided in the locale file.
@@ -237,74 +247,77 @@ app_error:
 ## List of localisation variables
 
 - `help`
-    - `no_commands`: the message that should appear when there is no commands in the bot, cog or group
-    - `bot`
-        - `title`: the title that should appear at the top of the help message
-        - `description`: the description of the help message. Can be information on his usages.  `%{help_command}` is
-          the invocation of the help command
-        - `no_category`: the title that should appear on top of the 'No cog-related' section
-    - `cog`
-        - `title`: the title that should appear at the top of the help message related to a cog. `%{cog}` is the name of
-          the
-          cog
-        - `commands`: the of the commands section
-    - `group`
-        - `title`: the title that should appear at the top of the help message related to a command group. `%{group}` is
-          the
-          name of the command group
-    - `command`
-        - `title`: the title that should appear at the top of the help message related to a command. `%{command}` is the
-          name of the command
-        - `not_found`: the message that should appear if no command corresponding to a name is found. `%{command}` is
-          the
-          name of the searched command
-    - `subcommand`
-        - `not_found`: the message that should appear if no subcommand of a command corresponding to a name is found.
-          `%{command}` is the name of the searched command, `%{subcommand}` of the searched subcommand
-        - `no_subcommand`: the message that should appear if a command doesn't have any subcommand. `%{command}` is the
-          name
-          of the command
-- `command_error`
-    - `bad_argument`: the message that should be sent if a command is used with the wrong arguments. `%{command_usage}`
-      is
-      the command signature, `%{help_command}` is the help command to get help on this command
-    - `missing_argument`: the message that should be sent if a command is used with not enough arguments.
-      `%{command_usage}` is the command signature, `%{help_command}` is the help command to get help on this command
-    - `not_found`: the message that should be sent if a command is used with unknown arguments (ex: discord member that
-      doesn't exist)
-    - `exception`: the message that should be sent if a command raises an internal error. `%{file}` is the file where
+  - `no_commands`: the message that should appear when there is no commands in the bot, cog or group
+  - `bot`
+    - `title`: the title that should appear at the top of the help message
+    - `description`: the description of the help message. Can be information on his usages.  `%{help_command}` is
+      the invocation of the help command
+    - `no_category`: the title that should appear on top of the 'No cog-related' section
+  - `cog`
+    - `title`: the title that should appear at the top of the help message related to a cog. `%{cog}` is the name of
+      the cog
+    - `commands`: the of the commands section
+  - `group`
+    - `title`: the title that should appear at the top of the help message related to a command group. `%{group}` is
+      the name of the command group
+  - `command`
+    - `title`: the title that should appear at the top of the help message related to a command. `%{command}` is the
+      name of the command
+    - `not_found`: the message that should appear if no command corresponding to a name is found. `%{command}` is
       the
-      error has been raised, `%{line}` is the line where the error has been raised, `%{command}` is the name of the
-      command, `%{error}` is the error type, `%{error_message}` is the error message
-    - `invite_message`: the message that should be used as a reason to justify the creation of an invitation to the
-      server where the bug as been raised
-    - `on_cooldown`: the message that should be sent if a command is used while it is on cooldown. `%{cooldown_time}` is
-      the cooldown duration in seconds
-    - `invalid_quoted_string`: the message that should be sent if a quoted string is badly or not closed
-    - `bot_missing_permission`: the message that should be sent if the bot doesn't have the necessary rights to execute
-      this command
-    - `user_missing_permission`: the message that should be sent if the user that called the command doesn't have the
-      necessary rights to use this command
+      name of the searched command
+  - `subcommand`
+    - `not_found`: the message that should appear if no subcommand of a command corresponding to a name is found.
+      `%{command}` is the name of the searched command, `%{subcommand}` of the searched subcommand
+    - `no_subcommand`: the message that should appear if a command doesn't have any subcommand. `%{command}` is the
+      name of the command
+- `command_error`
+  - `bad_argument`: the message that should be sent if a command is used with the wrong arguments. `%{command_usage}`
+    is the command signature, `%{help_command}` is the help command to get help on this command
+  - `missing_argument`: the message that should be sent if a command is used with not enough arguments.
+    `%{command_usage}` is the command signature, `%{help_command}` is the help command to get help on this command
+  - `not_found`: the message that should be sent if a command is used with unknown arguments (ex: discord member that
+    doesn't exist)
+  - `invite_message`: the message that should be used as a reason to justify the creation of an invitation to the
+    server where the bug as been raised
+  - `on_cooldown`: the message that should be sent if a command is used while it is on cooldown. `%{cooldown_time}` is
+    the cooldown duration in seconds
+  - `invalid_quoted_string`: the message that should be sent if a quoted string is badly or not closed
+  - `bot_missing_permission`: the message that should be sent if the bot doesn't have the necessary rights to execute
+    this command
+  - `user_missing_permission`: the message that should be sent if the user that called the command doesn't have the
+    necessary rights to use this command
 - `app_error`
-    - `transformer`: the message that should be sent if a transformer raises an error. `%{argument_value}` is the value
-      that has been passed to the transformer, `%{command_usage}` is the command signature, `%{help_command}` is the
-      help
-      of the command
-    - `no_private_message`: the message that should be sent if a command is used in a private message and can't be used
-      in this context
-    - `missing_role`: the message that should be sent if a command is used by a user that doesn't have the necessary
-      role to use this command. `%{role}` is the name of the role
-    - `missing_any_role`: the message that should be sent if a command is used by a user that doesn't have any of the
-      necessary roles to use this command. `%{roles_list}` is the list of the roles
-    - `missing_permissions`: the message that should be sent if a command is used by a user that doesn't have the
-      necessary permissions to use this command. `%{permissions_list}` is the list of the permissions
-    - `bot_missing_permissions`: the message that should be sent if the bot doesn't have the necessary permissions to
-      execute this command. `%{permissions_list}` is the list of the permissions
-    - `cooldown`: the message that should be sent if a command is used while it is on cooldown. `%{cooldown_time}` is
-      the cooldown duration in seconds
-    - `command_not_found`: the message that should be sent if a command doesn't exist but is still cached and called by
-      a
-      discord client
+  - `transformer`: the message that should be sent if a transformer raises an error. `%{argument_value}` is the value
+    that has been passed to the transformer, `%{command_usage}` is the command signature, `%{help_command}` is the
+    help of the command
+  - `no_private_message`: the message that should be sent if a command is used in a private message and can't be used
+    in this context
+  - `missing_role`: the message that should be sent if a command is used by a user that doesn't have the necessary
+    role to use this command. `%{role}` is the name of the role
+  - `missing_any_role`: the message that should be sent if a command is used by a user that doesn't have any of the
+    necessary roles to use this command. `%{roles_list}` is the list of the roles
+  - `missing_permissions`: the message that should be sent if a command is used by a user that doesn't have the
+    necessary permissions to use this command. `%{permissions_list}` is the list of the permissions
+  - `bot_missing_permissions`: the message that should be sent if the bot doesn't have the necessary permissions to
+    execute this command. `%{permissions_list}` is the list of the permissions
+  - `cooldown`: the message that should be sent if a command is used while it is on cooldown. `%{cooldown_time}` is
+    the cooldown duration in seconds
+  - `command_not_found`: the message that should be sent if a command doesn't exist but is still cached and called by
+    a discord client
+- `exception`: the message that should be sent if a command raises an internal error. `%{file}` is the file where
+  the error has been raised, `%{line}` is the line where the error has been raised, `%{function}` is the name of the
+  function, `%{error}` is the error type, `%{error_message}` is the error message
+- `footer`
+  - `version`: the version label that is displayed in discore embeds' footer. This footer can be used
+    by calling `set_embed_footer`
+  - `timeout` the timeout label that is displayed in discore embeds' footer, if a timeout is given.
+    This footer can be used by calling `set_embed_footer`
+  - `units`:
+    - `seconds`: the seconds unit that is used in discore embeds' footer, if a timeout is given.
+    - `minutes`: the minutes unit that is used in discore embeds' footer, if a timeout is given.
+    - `hours`: the hours unit that is used in discore embeds' footer, if a timeout is given.
+    - `days`: the days unit that is used in discore embeds' footer, if a timeout is given.
 
 ## Links
 

@@ -13,7 +13,7 @@ import logging
 
 import discord
 from discord.ext import commands
-from discord import app_commands
+from discord import app_commands, Client
 
 from discord.utils import *
 
@@ -487,7 +487,7 @@ def sanitize(text: str, limit=4000, crop_at_end: bool = True, replace_newline: b
 
 
 async def log_command_error(
-        bot: commands.Bot, ctx_i: Union[commands.Context, discord.Interaction], err: Exception,
+        ctx_i: Union[commands.Context, discord.Interaction], err: Exception,
         logger: logging.Logger = logging.getLogger(__name__)) -> None:
     """
     Sends the internal command error to the raising channel and to the
@@ -500,21 +500,23 @@ async def log_command_error(
     :return: None
     """
 
+    client = ctx_i.bot if isinstance(ctx_i, commands.Context) else ctx_i.client
+
     error_data = tb.extract_tb(err.__traceback__)[1]
     error_filename = path.basename(error_data.filename)
 
     if config.log.alert_user:
         await fallback_reply(ctx_i, i18n.t(
-            "command_error.exception",
+            "exception",
             file=error_filename,
             line=error_data.lineno,
-            command=error_data.name,
+            function=error_data.name,
             error=type(err).__name__,
             error_message=err))
 
     user = ctx_i.author if isinstance(ctx_i, commands.Context) else ctx_i.user
 
-    data: dict[str] = {
+    data: dict[str, str] = {
         "Server": f"{ctx_i.guild.name} ({ctx_i.guild.id})",
         "Command": ctx_i.command.name,
         "Author": f"{str(user)} ({user.id})",
@@ -524,7 +526,7 @@ async def log_command_error(
         data["Link to message"] = ctx_i.message.jump_url
 
     await log_data(
-        bot,
+        client,
         f"{ctx_i.command.name!r} "
         f"{'app ' if isinstance(ctx_i, discord.Interaction) or ctx_i.interaction else ''}"
         f"command failed for {str(user)!r} ({user.id!r})",
@@ -532,7 +534,7 @@ async def log_command_error(
 
 
 async def log_data(
-        bot: commands.Bot, message: str, data: dict,
+        bot: Client, message: str, data: dict,
         logger: logging.Logger = logging.getLogger(__name__),
         level: int = logging.ERROR,
         exc_info: Union[bool, tuple] = True) -> None:

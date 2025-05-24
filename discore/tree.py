@@ -121,7 +121,7 @@ class CommandTree(app_commands.CommandTree):
                 )
         elif isinstance(error, app_commands.CommandInvokeError):
             logged = True
-            await log_command_error(self.client, interaction, error.original, logger=_log)
+            await log_command_error(interaction, error.original, logger=_log)
         else:
             logged = True
             _log.error(
