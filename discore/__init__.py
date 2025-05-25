@@ -13,6 +13,10 @@ from .utils import *
 from .bot import Bot, get_bot
 from .cog import Cog
 
+del globals()['ui']
+
+from . import ui
+
 __version__ = "0.10"
 __version_info__ = (0, 10)
 __copyright__ = "Copyright 2022-2025"
