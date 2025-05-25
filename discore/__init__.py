@@ -4,6 +4,8 @@ Initialize the package Discore, based on the library discord.py.
 Copyright (c) 2022-2023 Kyrela
 """
 
+from . import ui as _ui
+
 from discord import *
 from discord import app_commands
 from discord.ext.commands import *
@@ -13,9 +15,7 @@ from .utils import *
 from .bot import Bot, get_bot
 from .cog import Cog
 
-del globals()['ui']
-
-from . import ui
+globals()['ui'] = _ui
 
 __version__ = "0.10"
 __version_info__ = (0, 10)
