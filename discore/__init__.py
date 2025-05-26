@@ -17,8 +17,8 @@ from .cog import Cog
 
 globals()['ui'] = _ui
 
-__version__ = "0.10"
-__version_info__ = (0, 10)
+__version__ = "0.11"
+__version_info__ = (0, 11)
 __copyright__ = "Copyright 2022-2025"
 __author__ = "Kyrela"
 __license__ = "MIT"
