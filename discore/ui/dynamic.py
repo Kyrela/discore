@@ -1,3 +1,3 @@
-from discord.ui.dynamic import DynamicItem, BaseT, V
+from discord.ui.dynamic import DynamicItem, BaseT, View, LayoutView
 
 __all__ = ('DynamicItem',)
