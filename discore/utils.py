@@ -1,5 +1,5 @@
 import string
-from typing import Union, Optional, Iterable, List, Callable
+from typing import Union, Optional, Iterable, List, Callable, overload
 import yamlenv
 import addict
 import i18n
@@ -391,38 +391,31 @@ def set_locale(value: Union[commands.Context, discord.Interaction, discord.Local
 
 async def fallback_reply(
         destination: Union[
-            commands.Context, discord.Interaction, discord.TextChannel,
-            discord.VoiceChannel, discord.Thread, discord.DMChannel,
-            discord.PartialMessageable, discord.GroupChannel,
-            discord.Message,
-        ],
-        *args, **kwargs) -> Union[discord.Message, discord.InteractionMessage]:
+            discord.Interaction, discord.Message, discord.abc.Messageable],
+        *args, **kwargs) -> discord.Message:
     """
     Try to reply to a message, if it fails, send it as a normal message
 
-    :param destination: The context or interaction of the command
+    :param destination: The destination to reply to. Can be a Context, Interaction, Message, Channel, etc.
     :param args: The arguments to pass to the reply
     :param kwargs: The keyword arguments to pass to the reply
-    :return: The return value of the function.
+    :return: The sent message
     """
 
     kwargs.setdefault("mention_author", False)
 
-    if isinstance(destination, commands.Context):
+    if isinstance(destination, (commands.Context, discord.Message)):
         try:
             return await destination.reply(*args, **kwargs)
         except discord.errors.Forbidden:
-            return await destination.send(*args, **kwargs)
-    if isinstance(destination, discord.Interaction):
+            return await destination.channel.send(*args, **kwargs)
+    elif isinstance(destination, discord.Interaction):
         kwargs.pop("mention_author")
         if destination.response.is_done():
             return await destination.channel.send(*args, **kwargs)
-        return await destination.response.send_message(*args, **kwargs, ephemeral=True)
-    if isinstance(destination, discord.Message):
-        try:
-            return await destination.reply(*args, **kwargs)
-        except discord.errors.Forbidden:
-            return await destination.channel.send(*args, **kwargs)
+        resource: discord.InteractionMessage = (
+            await destination.response.send_message(*args, **kwargs, ephemeral=True)).resource
+        return resource
     else:
         return await destination.send(*args, **kwargs)
 
