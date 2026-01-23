@@ -396,7 +396,7 @@ async def fallback_reply(
             discord.PartialMessageable, discord.GroupChannel,
             discord.Message,
         ],
-        *args, **kwargs):
+        *args, **kwargs) -> Union[discord.Message, discord.InteractionMessage]:
     """
     Try to reply to a message, if it fails, send it as a normal message
 
