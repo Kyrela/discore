@@ -407,7 +407,7 @@ async def fallback_reply(
     if isinstance(destination, (commands.Context, discord.Message)):
         try:
             return await destination.reply(*args, **kwargs)
-        except discord.errors.Forbidden:
+        except (discord.errors.Forbidden, discord.errors.HTTPException):
             return await destination.channel.send(*args, **kwargs)
     elif isinstance(destination, discord.Interaction):
         kwargs.pop("mention_author")
