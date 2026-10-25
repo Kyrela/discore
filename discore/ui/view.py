@@ -7,7 +7,7 @@ from aiohttp import ClientOSError, ServerDisconnectedError
 
 # Import all necessary classes and functions from discord.ui.view
 from discord.ui.view import View as _View
-from discord.ui.view import _ViewWeights, _ViewCallback, _walk_all_components, _component_to_item
+from discord.ui.view import _ViewWeights, _walk_all_components, _component_to_item
 from discord import Interaction
 from discord import DiscordServerError
 from discord.ui.item import Item
