@@ -1,16 +1,13 @@
-from typing import TYPE_CHECKING
+import importlib
 
-from discord.ui.select import (
-    Select, UserSelect, RoleSelect, MentionableSelect, ChannelSelect, select,
-    V, BaseSelectT, SelectT, UserSelectT, RoleSelectT, ChannelSelectT, MentionableSelectT,
-    SelectCallbackDecorator, DefaultSelectComponentTypes
-)
+_select = importlib.import_module('discord.ui.select')
 
-if TYPE_CHECKING:
-    from discord.ui.select import (
-        ValidSelectType, PossibleValue, ValidDefaultValues
-    )
+__all__ = _select.__all__
 
-__all__ = (
-    'Select', 'UserSelect', 'RoleSelect', 'MentionableSelect', 'ChannelSelect', 'select'
-)
+
+def __getattr__(name: str):
+    return getattr(_select, name)
+
+
+def __dir__():
+    return sorted({*globals(), *dir(_select)})

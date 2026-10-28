@@ -6,8 +6,9 @@ import i18n
 from aiohttp import ClientOSError, ServerDisconnectedError
 
 # Import all necessary classes and functions from discord.ui.view
+import discord.ui.view as _view
 from discord.ui.view import View as _View
-from discord.ui.view import _ViewWeights, _walk_all_components, _component_to_item
+
 from discord import Interaction
 from discord import DiscordServerError
 from discord.ui.item import Item
@@ -58,3 +59,10 @@ class View(_View):
                 interaction.client,
                 f"{item_name} item interaction failed for {str(user)!r} ({user.id!r})",
                 data, logger=_log, exc_info=(type(error), error, error.__traceback__))
+
+
+def __getattr__(name: str):
+    return getattr(_view, name)
+
+def __dir__():
+    return sorted({*globals(), *dir(_view)})
